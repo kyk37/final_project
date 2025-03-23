@@ -1,5 +1,6 @@
 # Event Management System Requirements
 
+## -- Basic Requirements --
 - [ ] Landing Page (with list of events, and event title,time, location, type
 - [ ] Search function to find events using tags/keywords
 - [ ] Users can view eachother's details
@@ -26,3 +27,7 @@
 - [ ] allows registered users to subscribe to certain tags and organizers
 - [ ] event manager account allows batch creation from CSV imports and batch event cancelling
 - [ ] system to provide a filter function on all event lists using event type, time, locationetc.
+
+#### Writen By:
+- Kyle Kessler
+- Dan Hiss
