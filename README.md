@@ -1,5 +1,10 @@
-# Event Management System Requirements
+# Event Management System 
+# Library/Module Requirements
+- FastAPI: https://fastapi.tiangolo.com/
+- Google Calender: https://developers.google.com/calendar/api/v3/reference/events#methods
+- SQLAlchemy (Database): https://www.sqlalchemy.org/
 
+  
 ## -- Basic Requirements --
 - [ ] Landing Page (with list of events, and event title,time, location, type
 - [ ] Search function to find events using tags/keywords
