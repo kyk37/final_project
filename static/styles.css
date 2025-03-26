@@ -18,6 +18,21 @@ body {font-family: Arial, Helvetica, sans-serif;}
   color: black;
 }
 
+.menuitem {
+  background-color: #e5e5e5;
+  padding: 8px;
+  margin-top: 7px;
+  display: block;
+  width: 100%;
+  color: black;
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.menuitem:hover {
+  background-color: #dcdcdc;
+}
+
 .main {
   float: left;
   width: 60%;
@@ -32,38 +47,6 @@ body {font-family: Arial, Helvetica, sans-serif;}
   margin-top: 7px;
   text-align: center;
 }
-
-/* Login Modal Page */
-input[type=text], input[type=password] {
-  width: 100%;
-  padding: 12px 20px;
-  margin: 8px 0;
-  display: inline-block;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-.loginbutton {
-  background-color: #04AA6D;
-  color: white;
-  padding: 14px 20px;
-  margin: 8px 0;
-  border: None;
-  cursor: pointer;
-  width: 100%;
-}
-
-.loginbutton:hover {
-  opacity:0.8
-}
-
-.cancelbtn {
-  width: auto;
-  padding: 10px 18px;
-  background-color: #f44336;
-}
-
-
 
 
 @media only screen and (max-width: 620px) {
@@ -80,6 +63,4 @@ input[type=text], input[type=password] {
   .cancelbtn {
     width:100%;
 }
-
-
-
+}
