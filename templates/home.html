@@ -3,40 +3,69 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <title>Event Management Website</title>
 </head>
-<body style="font-family:Verdana;color:#aaaaaa;">
-  <div style="background-color:#e5e5e5;padding:15px;text-align:center;">
-    <h1>Hello World</h1>
-  </div>
-    
-  <div style="overflow:auto;">
 
+<body style="font-family:Verdana;color:#aaaaaa;">
+  <div class="header">
+    <div class="header-left">
+      <h1>Event Manager</h1>
+    </div>
+
+  
+    <div class="header-right">
+      <button class="login-btn">Login</button>
+    </div>
+  </div>
+
+  <div class="left">
+    <h2 style="text-align:center;">Upcoming Events</h2>
     <div class="menu">
       <a href="#" class="menuitem">Event 1</a>
       <a href="#" class="menuitem">Event 2</a>
       <a href="#" class="menuitem">Event 3</a>
     </div>
+  </div>
 
-    <div class="main">
-      <h2>Event Search</h2>
-      <p>test center</p>
+  <div class="main">
+    <div class="search-section">
+      <h2 style="text-align:center;">Event Search</h2>
+  
+      <div class="search-box">
+        <div class="search-centered">
+          <div class="search">
+            <form action="/action_page.php">
+              <input type="search" placeholder="Search..." name="search">
+              <button type="submit"><i class="fa fa-search"></i></button>
+            </form>
+          </div>
+        </div>
+  
+        <div class="search-extra">
+          <p style="text-align:center;">More content can go here later...</p>
+        </div>
+      </div>
     </div>
-
+  </div>
+  
     <div class="right">
       <h2>Calendar</h2>
       <p>test info</p>
     </div>
-
   </div>
 
   <div style="clear: both;"></div>
 
-  <div style="background-color:#e5e5e5;text-align:center;padding:10px;margin-top:7px;"> 
-    Footer stuff here — About, Privacy Policy, Contact us
+  <div class="footer">
+    <div class="botnav">
+      <a class="active" href="#home">Home</a>
+      <a href="#About">About</a>
+      <a href="#pPolicy">Privacy Policy</a>
+      <a href="#Contact">Contact Us</a>
+      © copyright Does not Exist
+    </div>
   </div>
-  <div style="background-color:#e5e5e5;text-align:center;padding:10px;margin-top:7px;">
-    © copyright Does not Exist
-  </div>
+
 </body>
 </html>
