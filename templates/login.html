@@ -1,0 +1,35 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+
+<body>
+    <div class="page-container">
+    <div class="header">
+        <div class="header-left">
+          <h1>Event Manager</h1>
+        </div>
+        <div class="header-right">
+          <a href="/" class="login-btn">Home</a>
+        </div>
+      </div>
+
+    <div class="login-wrapper">
+      <div class="login-container">
+        <h2>Login</h2>
+        <form action="/profile/home" method="post">
+          <input type="text" placeholder="Username" name="username" required>
+          <input type="password" placeholder="Password" name="password" required>
+          <button type="submit">Log In</button>
+        </form>
+      </div>
+    </div>
+    </div>
+  </body>
+</html>

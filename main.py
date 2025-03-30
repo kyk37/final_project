@@ -13,9 +13,9 @@ def main(request: Request):
     return templates.TemplateResponse('home.html', {'request':request} )
 
 
-@app.get("/login")
-def login():
-    return
+@app.get("/login", response_class=HTMLResponse)
+def login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
 
 
 @app.get("/profile/home")

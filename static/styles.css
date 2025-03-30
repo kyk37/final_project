@@ -231,7 +231,55 @@ html{
   box-shadow: 0 2px 6px var(--background-900);
 }
 
+.login-wrapper {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--background); /* ensures no global override */
+}
 
+.login-container {
+  background-color: var(--background-800);
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px var(--background-900);
+  border: 1px solid var(--background-600);
+  width: 100%;
+  max-width: 400px;
+  color: var(--text);
+}
+
+
+.login-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.login-container input[type="text"],.login-container input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid var(--background-600);
+  background-color: var(--background-700);
+  color: var(--text);
+  border-radius: 6px;
+}
+
+.login-container button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--primary);
+  color: var(--text);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.login-container button:hover {
+  background-color: var(--primary-600);
+}
 .search-box {
   border: 2px solid #ccc;
   border-radius: 10px;
@@ -322,13 +370,10 @@ html{
   .left, .menu, .main, .right {
     width: 100%;
   }
-/* Login Screen*/
-  span.psw {
-    display:block;
-    float: none;
+  /* Login Screen*/
+  .login-btn {
+    width: 100%;
+    text-align: center;
   }
-  .cancelbtn {
-    width:100%;
-}
 
 }
