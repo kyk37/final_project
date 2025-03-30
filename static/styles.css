@@ -268,14 +268,21 @@ html{
 
 .login-container button {
   width: 100%;
-  padding: 12px;
+  padding: 8px 12px;
+  font-size: 16px;
   background-color: var(--primary);
   color: var(--text);
-  border: none;
+  border: 2px solid var(--text-200); /* or #ccc for light grey */
   border-radius: 6px;
   cursor: pointer;
   font-size: 16px;
+  display: flex;
+  align-items: center;
+justify-content: center;
 }
+
+
+
 
 .login-container button:hover {
   background-color: var(--primary-600);
