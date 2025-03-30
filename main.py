@@ -31,18 +31,23 @@ def prof_settings():
 def prof_password():
     return
 
-@app.get("profile/events")
+@app.get("/profile/events")
 def prof_events():
     return
 
-@app.get("profile/calendar")
+@app.get("/profile/calendar")
 def prof_calendar():
     return
 
-@app.get("organizer/create_event")
+@app.get("/organizer/create_event")
 def org_create_event():
     return
 
-@app.get("organizer/delete_event")
+@app.get("/organizer/delete_event")
 def org_del_event():
     return
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
