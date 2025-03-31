@@ -145,7 +145,7 @@ html{
   color:var(--text);
 }
 
-.header-right .login-btn {
+.header-right .login-btn, .header-right .settings-btn {
   padding: 10px 16px;
   font-size: 16px;
   background-color:var(--primary);
@@ -165,7 +165,7 @@ html{
   padding: 0 10px;   /* optional side padding */
 }
 
-.header-right .login-btn:hover {
+.header-right .login-btn:hover, .settings-btn:hover {
   background-color:var(--primary-600);
   text-decoration: none;
   border: 1px solid #ccc;
@@ -236,7 +236,7 @@ html{
   box-shadow: 0 2px 6px var(--background-900);
 }
 
-.login-wrapper {
+.login-wrapper, .settings-wrapper {
   flex: 1;
   display: flex;
   justify-content: center;
@@ -340,10 +340,10 @@ html{
   box-shadow: 0 2px 6px var(--background-900);
 }
 
-/* Login Page */
+/* Login Page and Profile Settings*/
 
 
-.login-container {
+.login-container, .settings-container{
   background-color: var(--background-800);
   padding: 30px 40px;
   border-radius: 12px;
@@ -354,21 +354,21 @@ html{
   color: var(--text);
 }
 
-.login-container input {
+.login-container input, .settings-container input{
   color:var(--text)
 }
 
 /* Also apply color to placeholder text for consistency */
-.login-container input::placeholder {
+.login-container input::placeholder, .settings-container input::placeholder{
   color: var(--text-300); /* slightly dimmer than full text, but readable */
 }
 
-.login-container h2 {
+.login-container h2 .settings-container h2 {
   text-align: center;
   margin-bottom: 20px;
 }
 
-.login-container input[type="text"],.login-container input[type="password"] {
+.login-container input[type="text"],.login-container input[type="password"], .settings-container input[type="text"], .settings-container input[type="password"] {
   width: 100%;
   padding: 12px;
   margin: 10px 0;
@@ -389,7 +389,8 @@ html{
 }
 
 .button-row .new-user-btn,
-.button-row .submit-btn {
+.button-row .submit-btn,
+.button-row .cancel-btn {
   width: 50%;
   padding: 12px;
   font-size: 16px;
@@ -402,7 +403,8 @@ html{
 }
 
 .button-row .new-user-btn:hover,
-.button-row .submit-btn:hover {
+.button-row .submit-btn:hover,
+.button-row .cancel-btn:hover {
   background-color: var(--primary-600);
 }
 
@@ -474,7 +476,6 @@ html{
 .modal-content button:hover {
   background-color: var(--primary-600);
 }
-
 
 
 @media only screen and (max-width: 770px) {

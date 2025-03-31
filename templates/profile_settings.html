@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile Settings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+  <div class="page-container">
+    <div class="header">
+      <div class="header-left">
+        <h1>Event Manager</h1>
+      </div>
+      <div class="header-right">
+        <a href="/" class="login-btn">Home</a>
+      </div>
+    </div>
+
+    <div class="settings-wrapper">
+      <div class="settings-container">
+        <h2>Profile Settings</h2>
+
+        <form action="/profile/update" method="post">
+          <input type="text" name="username" placeholder="Username" value="Current Username" required>
+          <input type="text" name="email" placeholder="Email" value="Current Password" required>
+          <input type="password" name="new_password" placeholder="New Password">
+          <input type="password" name="confirm_password" placeholder="Confirm Password">
+
+          <div class="button-row">
+            <button type="submit" class="submit-btn">Save Changes</button>
+            <button type="button" class="cancel-btn" onclick="window.location.href='/profile'">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a>© copyright Does not Exist </a>
+    </div>
+  </div>
+
+  <script>
+    // If you plan to include a modal for changing password or other features, you can use the same script as in the login page
+    // Here is an example for a modal in case you want to add one for any additional settings
+    const modal = document.getElementById("settingsModal");
+    const openBtn = document.querySelector(".open-settings-btn");
+    const closeBtn = modal.querySelector(".close");
+    
+    openBtn.onclick = () => {
+      modal.style.display = "block";
+    };
+
+    closeBtn.onclick = () => {
+      modal.style.display = "none";
+    };
+
+    window.onclick = (event) => {
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    };
+  </script>
+
+</body>
+</html>
