@@ -1,8 +1,12 @@
 from pydantic import BaseModel
-from fastapi import FastAPI, Form, Request
+from typing import Annotated
+from fastapi import FastAPI, Form, Request, Depends, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+from sqlalchemy import create_engine, text
 
 app = FastAPI()
 templates = Jinja2Templates(directory='templates')
@@ -21,7 +25,7 @@ def login(request: Request):
 @app.get("/profile/home")
 def prof_main():
     return
-
+    
 @app.get("/profile/settings")
 def prof_settings():
     return
