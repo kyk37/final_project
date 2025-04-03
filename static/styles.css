@@ -1,0 +1,496 @@
+
+:root[data-theme="dark"] {
+  --text: #e8f1f7;
+  --background: #232426;
+  --primary: #3f3159;
+  --secondary: #334866;
+  --accent: #414c38;
+  
+  --text-50: #ecf3f8;
+  --text-100: #d9e8f2;
+  --text-200: #b4d1e4;
+  --text-300: #8ebad7;
+  --text-400: #68a3ca;
+  --text-500: #428cbd;
+  --text-600: #357097;
+  --text-700: #285471;
+  --text-800: #1b384b;
+  --text-900: #0d1c26;
+  --text-950: #070e13;
+
+  --background-50: #f2f2f3;
+  --background-100: #e4e5e7;
+  --background-200: #cacbce;
+  --background-300: #afb1b6;
+  --background-400: #95989d;
+  --background-500: #7a7e85;
+  --background-600: #62656a;
+  --background-700: #494b50;
+  --background-800: #313235;
+  --background-900: #18191b;
+  --background-950: #0c0d0d;
+
+  --primary-50: #f1eff6;
+  --primary-100: #e3deed;
+  --primary-200: #c8bddb;
+  --primary-300: #ac9cc9;
+  --primary-400: #907bb7;
+  --primary-500: #745ba4;
+  --primary-600: #5d4884;
+  --primary-700: #463663;
+  --primary-800: #2f2442;
+  --primary-900: #171221;
+  --primary-950: #0c0910;
+
+  --secondary-50: #eef2f6;
+  --secondary-100: #dde4ee;
+  --secondary-200: #bbc9dd;
+  --secondary-300: #99aecc;
+  --secondary-400: #7793bb;
+  --secondary-500: #5578aa;
+  --secondary-600: #446088;
+  --secondary-700: #334866;
+  --secondary-800: #223044;
+  --secondary-900: #111822;
+  --secondary-950: #090c11;
+
+  --accent-50: #f2f4f0;
+  --accent-100: #e5e9e2;
+  --accent-200: #cbd4c4;
+  --accent-300: #b1bea7;
+  --accent-400: #97a88a;
+  --accent-500: #7e936c;
+  --accent-600: #647557;
+  --accent-700: #4b5841;
+  --accent-800: #323b2b;
+  --accent-900: #191d16;
+  --accent-950: #0d0f0b;
+}
+
+/* Home Page and All Pages*/
+.page-container {
+  max-width: 1200px;
+  background: var(--background);
+  width: 100%; /* take full width of viewport if needed */
+  margin: 0 auto;
+  padding: 0 10px;
+  flex: 1; /* grow to fill space */
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  margin-top: 5px; /* <-- space between header and content */
+  display: flex;
+  flex-direction: row;  /* ✅ Makes them line up horizontally */
+  flex: 1;
+  gap: 10px;
+  background: var(--background);
+  margin-bottom: 5px;
+}
+
+
+html, body {
+  height: 100%;
+  margin: 0;
+  min-height: 100vh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background);
+}
+.page-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+
+body {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  background-color: var(--background);
+  color: var(--text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body, input, button, textarea, select {
+  background-color: var(--background-800);
+}
+
+html{
+  background-color: var(--background);
+}
+
+.header {
+  clear: both;
+  background-color: var(--background-800);
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 10px;
+  border: 1px solid var(--background-600);
+  box-shadow: 0 2px 6px var(--background-900);
+}
+
+.header-left h1 {
+  margin: 0;
+  color:var(--text);
+}
+
+.header-right .login-btn {
+  padding: 10px 16px;
+  font-size: 16px;
+  background-color:var(--primary);
+  color: var(--text);
+  border: 5px;
+  border-radius: 6px;
+  border-color: var(--background);
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.page-container {
+  max-width: 1200px; /* or any width that fits your layout */
+  margin: 0 auto;    /* center horizontally */
+  padding: 0 10px;   /* optional side padding */
+}
+
+.header-right .login-btn:hover {
+  background-color:var(--primary-600);
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.left {
+  background-color: var(--background-800);
+  width: clamp(150px, 20%, 250px);
+  padding: 7px;
+  margin: 3px 3px; 
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid var(--background-600);
+  box-shadow: 0 2px 6px var(--background-900);
+}
+
+
+.menu {
+  /* float: left; <-- remove this since it's now in .left */
+  width: 100%;
+  text-align: center;
+}
+
+.menu a {
+  background-color:var(--primary);
+  padding: 8px;
+  margin-top: 7px;
+  display: block;
+  width: 100%;
+  color: var(--text)
+}
+
+.menuitem {
+  background-color:var(--background-800);
+  padding: 8px;
+  margin-top: 7px;
+  display: block;
+  width: 100%;
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.menuitem:hover {
+  background-color: var(--primary-600);;
+}
+
+.main {
+  width: 60%;
+  padding: 0 2px;
+  margin-top: 7px;
+  margin: 3px 3px; 
+  border-radius: 5px;
+  border: 1px solid var(--background-600);
+  box-shadow: 0 2px 6px var(--background-900);
+}
+
+.right {
+  background-color:var(--background-800);
+  width: clamp(150px, 20%, 250px);
+  padding: 15px;
+  margin-top: 7px;
+  padding: 0 7px;
+  text-align: center;
+  margin: 3px 3px; 
+  border-radius: 10px;
+  border: 1px solid var(--background-600);
+  box-shadow: 0 2px 6px var(--background-900);
+}
+
+.login-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 0;
+}
+
+.search-box {
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  background-color: var(--background-800);
+}
+
+.search-centered {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.search {
+  width: max-content;
+  font-family: 'Courier New', Courier, monospace;
+  display: flex;
+  padding: 14px;
+  border-radius: 28px;
+  font-size: 16px;
+  background: var(--background-600);
+  color: var(--text);
+}
+
+.search-section {
+  background-color: var(--background-800);
+  padding: 15px;
+  border-radius: 8px;
+  border-color:var(--background-800);
+  color: var(--text);
+}
+
+.search form {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search input[type="search"] {
+  background-color: var(--background-800);
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px 0 0 4px;
+  outline: none;
+}
+
+
+.search button {
+  padding: 8px 12px;
+  font-size: 16px;
+  border: 1px solid var(--text-200); /* or #ccc for light grey */
+  background-color: var(--primary);
+  color: var(--text);
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.search * {
+  background-color: transparent;
+
+}
+
+.search button i {
+  color: inherit;
+  background-color: transparent;
+}
+
+.search button:hover {
+  background-color: var(--primary-600);
+  color: var(--text);
+  border: 1px solid var(--text-200); /* or #ccc for light grey */
+  box-shadow: 0 2px 6px var(--background-700);
+}
+.search button:hover i {
+  color: var(--text);
+}
+
+.footer {
+  clear: both;
+  background-color:var(--background-800);
+  text-align: center;
+  padding: 10px;
+  margin-top: auto;
+  border-radius: 10px;
+  border: 1px solid var(--background-600);
+  box-shadow: 0 2px 6px var(--background-900);
+}
+
+/* Login Page */
+
+
+.login-container {
+  background-color: var(--background-800);
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px var(--background-900);
+  border: 1px solid var(--background-600);
+  width: 100%;
+  max-width: 400px;
+  color: var(--text);
+}
+
+.login-container input {
+  color:var(--text)
+}
+
+/* Also apply color to placeholder text for consistency */
+.login-container input::placeholder {
+  color: var(--text-300); /* slightly dimmer than full text, but readable */
+}
+
+.login-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.login-container input[type="text"],.login-container input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid var(--background-600);
+  background-color: var(--background-700);
+  color: var(--text);
+  border-radius: 6px;
+}
+
+
+.button-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.button-row .new-user-btn,
+.button-row .submit-btn {
+  width: 50%;
+  padding: 12px;
+  font-size: 16px;
+  background-color: var(--primary);
+  color: var(--text);
+  border: 2px solid var(--text-200);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.button-row .new-user-btn:hover,
+.button-row .submit-btn:hover {
+  background-color: var(--primary-600);
+}
+
+/* Login Page Modal */
+/* Modal container */
+
+.modal-content input {
+  color:var(--text)
+}
+
+.modal-content input::placeholder {
+  color: var(--text-300); /* slightly dimmer than full text, but readable */
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  overflow: auto;
+  color:var(--text)
+}
+
+/* Modal content box */
+.modal-content {
+  background-color: var(--background-800);
+  margin: 10% auto;
+  padding: 20px 30px;
+  border: 1px solid var(--background-600);
+  width: 100%;
+  max-width: 400px;
+  border-radius: 10px;
+  color: var(--text);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+/* Close button */
+.modal-content .close {
+  float: right;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--text);
+}
+
+/* Modal form inputs */
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background: var(--background-600);
+  border: 1px solid var(--background-400);
+  border-radius: 6px;
+  color: var(--text);
+}
+
+.modal-content button {
+  margin-top: 15px;
+  width: 100%;
+  padding: 10px;
+  background-color: var(--primary);
+  color: var(--text);
+  border: 2px solid var(--text-200);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.modal-content button:hover {
+  background-color: var(--primary-600);
+}
+
+
+
+@media only screen and (max-width: 770px) {
+  /* Home Page*/
+  /* For mobile phones: */
+  .content {
+    flex-direction: column;
+  }
+
+  .left, .menu, .main, .right {
+    width: 100%;
+  }
+  /* Login Screen*/
+  .button-row {
+    display: flex;
+    text-align: center;
+  }
+
+}

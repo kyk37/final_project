@@ -1,10 +1,15 @@
 # Event Management System 
 # Library/Module Requirements
-- FastAPI: https://fastapi.tiangolo.com/
+- FastAPI: pip install fastapi[all]: https://fastapi.tiangolo.com/
+- pip install fastapi-users[all] (for sqlachemy w/ fastapi)
 - Google Calender: https://developers.google.com/calendar/api/v3/reference/events#methods
 - SQLAlchemy (Database): https://www.sqlalchemy.org/
+- PyJWT: (Password Hashing)
+- passlib
+- bcrypt
+- openssl
+---> https?
 
-  
 ## -- Basic Requirements --
 - [ ] Landing Page (with list of events, and event title,time, location, type
 - [ ] Search function to find events using tags/keywords
