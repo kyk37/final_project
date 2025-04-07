@@ -160,7 +160,7 @@ def login_for_access_token(
 
 @app.post("/logout")
 def logout():
-    response = RedirectResponse(url="/login", status_code=303)
+    response = RedirectResponse(url="/", status_code=303)
     response.delete_cookie("access_token")
     return response
 # -----------------------------
