@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Annotated, Optional
+from contextlib import asynccontextmanager
 
 from jose import JWTError, jwt
 
@@ -22,10 +23,24 @@ from src.hasher import Hasher
 from src.auth import create_access_token, decode_access_token
 from src.config import SECRET_KEY,  ALGORITHM
 from src.usr_model import Base as UserBase
+from src.startup import create_admin_user
 
+
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db: Session = SessionLocal()
+    try:
+        create_admin_user(db)
+    finally:
+        db.close()
+    yield
+        
+        
 router = APIRouter()
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory='templates')
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -42,8 +57,13 @@ SessionLocal.configure(binds={User: engine_usr, Events: engine_event})
 # OATH Setup
 # Secret key (keep it secret in production!)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+# Create both databases. Note if pyc files exist with older existing users
+# the users will still exist if this is remade. Delete the pyc files and the databases
+# to clearly wipe the database
 UserBase.metadata.create_all(bind=engine_usr)
 UserBase.metadata.create_all(bind=engine_event)
+
 
 def get_session():
     db = SessionLocal()
@@ -76,8 +96,6 @@ def get_current_user(request: Request, db: Session = Depends(get_session)):
 
     return db.query(User).filter(User.uid == int(user_id)).first()
 
-
-
 # -----------------------------
 # Home Page
 # -----------------------------
@@ -91,7 +109,6 @@ def main(request: Request, current_user: Optional[User] = Depends(get_current_us
         'request': request,
         'username': current_user.username if current_user else None
     })
-
 
 # -----------------------------
 # LOGIN AND REGISTRATION

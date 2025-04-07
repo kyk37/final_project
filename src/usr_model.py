@@ -1,13 +1,10 @@
-from sqlalchemy import Column, Integer, String, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column, declarative_base
+from sqlalchemy import Integer, String, DateTime, func
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.ext.declarative import as_declarative
 from dataclasses import dataclass
 from typing import ClassVar
-from jose import JWTError, jwt
-from datetime import datetime, timedelta
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi import Depends, HTTPException
 
+from sqlalchemy import Boolean
 
 
 @as_declarative()
@@ -24,11 +21,12 @@ class User(Base):
     last_name: Mapped[str] = mapped_column(String, nullable=False)
     created_at:Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
     
-    # Optional about field
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+
     about: Mapped[str] = mapped_column(String, nullable=True)
     
     def __repr__(self):
-        return f"<User(name={self.__class__.__name__}, username={self.username}, email: {self.email}, password: {self.password_hashed}"
+        return f"<User(name={self.__class__.__name__}, admin={self.is_admin} username={self.username}, email: {self.email}, password: {self.password_hashed}"
 
 @dataclass
 class UserInDB(User):
