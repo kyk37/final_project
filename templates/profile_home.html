@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html data-theme="dark">
+  
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/static/styles.css">
@@ -8,61 +9,41 @@
 </head>
 
 <body>
-  <div class="page-container">
-    <!-- Header -->
+  <div class=" page-container">
     <div class="header">
       <div class="header-left">
         <h1>Event Manager</h1>
       </div>
 
       <div class="header-right">
-        {% if username %}
-          <a href="/profile/home" class="login-btn">Profile</a>
-        {% else %}
-          <a href="/login" class="login-btn">Login</a>
-        {% endif %}
+        <a href="/" class="login-btn">Home</a>
       </div>
     </div>
 
-    <!-- Content -->
     <div class="content">
-      <div class="left">
-        <h2 style="text-align:center;">Upcoming Events</h2>
-        <div class="menu">
-          <a href="#" class="menuitem">Event 1</a>
-          <a href="#" class="menuitem">Event 2</a>
-          <a href="#" class="menuitem">Event 3</a>
-        </div>
+    <div class="left">
+      <h2 style="text-align:center;">Account Settings</h2>
+      <div class="menu">
+        <a href="../profile/home" class="menuitem">Home</a>
+        <a href="../profile/edit" class="menuitem">Edit Profile</a>
+        <a href="../profile/security" class="menuitem">Security</a>
+        <a href="../profile/events" class="menuitem">Events Joined</a>
+        <a href="#" class="menuitem" onclick="logout()">Logout</a>
       </div>
+    </div>
 
+      <!-- Main Section -->
       <div class="main">
         <div class="search-section">
-          <h2 style="text-align:center;">Event Search</h2>
+          <h2 style="text-align:center;">Account</h2> <!--Username can go here-->
 
           <div class="search-box">
-            <div class="search-centered">
-              <div class="search">
-                <form action="/">
-                  <input type="search" placeholder="Search..." name="search">
-                  <button type="submit"><i class="fa fa-search"></i></button>
-                </form>
-              </div>
-            </div>
+            <h3> Profile information displayed here</h3>
 
-            <div class="search-extra">
-              <p style="text-align:center;">More content can go here later...</p>
-            </div>
           </div>
         </div>
       </div>
-
-      <div class="right">
-        <h2>Calendar</h2>
-        <p>test info</p>
-      </div>
     </div>
-
-    <div style="clear: both;"></div>
 
     <!-- Footer -->
     <div class="footer">
@@ -74,14 +55,30 @@
         <a>© copyright Does not Exist </a>
       </div>
     </div>
+    
+  </div>
 
+  
     <script>
       const toggleTheme = () => {
         const body = document.body;
         const isDark = body.getAttribute('data-theme') === 'dark';
         body.setAttribute('data-theme', isDark ? 'light' : 'dark');
       };
+
+        function logout() {
+          fetch("/logout", {
+            method: "POST"
+          }).then(() => {
+            window.location.href = "/login";
+          }).catch(err => {
+            alert("Logout failed.");
+            console.error(err);
+          });
+        }
+      
     </script>
-  </div>
+</div>
 </body>
+
 </html>

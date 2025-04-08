@@ -24,28 +24,29 @@
       <div class="login-container">
         <h2>Login</h2>
 
-        <form action="/profile/home" method="post">
-          <input type="text" placeholder="Username" name="username" required>
-          <input type="password" placeholder="Password" name="password" required>
+          <form id="loginForm">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
           
-          <div class="button-row">
-            <button type="button" class="new-user-btn">New User</button>
-            <button type="submit" class="submit-btn">Log In</button>
-          </div>
-
-          <!-- Modal -->
-        <div id="newUserModal" class="modal">
-          <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Create New Account</h3>
-            <form action="/register" method="post">
-              <input type="text" name="new_username" placeholder="Username" required>
-              <input type="password" name="new_password" placeholder="Password" required>
-              <input type="email" name="email" placeholder="Email" required>
-              <button type="submit">Register</button>
-            </form>
-          </div>
-        </div>
+            <div class="button-row">
+              <button type="button" class="new-user-btn">New User</button>
+              <button type="submit" class="submit-btn">Log In</button>
+            </div>
+          </form>
+            
+            <div id="newUserModal" class="modal">
+              <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Create New Account</h3>
+                <form id="registerForm">
+                  <input type="text" name="new_username" placeholder="Username" required>
+                  <input type="password" name="new_password" placeholder="Password" required>
+                  <input type="email" name="email" placeholder="Email" required>
+                  <button type="submit">Register</button>
+                </form>
+                <p id="registerMessage" style="margin-top: 10px;"></p>
+              </div>
+            </div>
 
         </form>
       </div>
@@ -59,9 +60,12 @@
     </div>
 
     <script>
+      // ----- Modal and Registration Logic -----
       const modal = document.getElementById("newUserModal");
       const openBtn = document.querySelector(".new-user-btn");
       const closeBtn = modal.querySelector(".close");
+      const registerForm = document.getElementById("registerForm");
+      const messageBox = document.getElementById("registerMessage");
     
       openBtn.onclick = () => {
         modal.style.display = "block";
@@ -71,12 +75,96 @@
         modal.style.display = "none";
       };
     
-      window.onclick = (event) => {
-        if (event.target === modal) {
+      window.onclick = (e) => {
+        if (e.target === modal) {
           modal.style.display = "none";
         }
       };
+    
+      registerForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+    
+        const formData = new FormData(registerForm);
+        const username = formData.get("new_username");
+        const password = formData.get("new_password");
+    
+        try {
+          const registerResponse = await fetch("/register", {
+            method: "POST",
+            body: formData
+          });
+    
+          if (!registerResponse.ok) {
+            const error = await registerResponse.json();
+            messageBox.style.color = "red";
+            messageBox.textContent = error.detail || "Registration failed.";
+            return;
+          }
+    
+          messageBox.style.color = "lightgreen";
+          messageBox.textContent = "Registered! Logging you in...";
+    
+          const loginResponse = await fetch("/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ username, password })
+          });
+    
+          if (!loginResponse.ok) {
+            messageBox.style.color = "red";
+            messageBox.textContent = "Registration worked, but login failed.";
+            return;
+          }
+    
+          const loginData = await loginResponse.json();
+          localStorage.setItem("access_token", loginData.access_token);
+    
+          // ✅ Redirect to profile page after successful registration/login
+          window.location.href = "/profile/home";
+    
+        } catch (err) {
+          messageBox.style.color = "red";
+          messageBox.textContent = "Something went wrong.";
+        }
+      });
+    
+      // ----- Login Form Logic -----
+      const loginForm = document.getElementById("loginForm");
+      if (loginForm) {
+        loginForm.addEventListener("submit", async function (e) {
+          e.preventDefault();
+    
+          const formData = new FormData(loginForm);
+          const username = formData.get("username");
+          const password = formData.get("password");
+    
+          try {
+            const loginResponse = await fetch("/token", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({ username, password })
+            });
+    
+            if (!loginResponse.ok) {
+              alert("Login failed. Please check your credentials.");
+              return;
+            }
+    
+            const loginData = await loginResponse.json();
+            localStorage.setItem("access_token", loginData.access_token);
+    
+            window.location.href = "/profile/home";
+    
+          } catch (err) {
+            alert("Login error. Please try again.");
+            console.error(err);
+          }
+        });
+      }
     </script>
+    
+    
+    
     
   </body>
 </html>
