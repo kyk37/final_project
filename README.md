@@ -8,6 +8,8 @@
 - passlib
 - bcrypt
 - openssl
+- JWT: pip install python-jose[cryptography]
+
 ---> https?
 
 ## -- Basic Requirements --
