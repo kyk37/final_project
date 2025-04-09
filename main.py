@@ -13,55 +13,60 @@ from fastapi.responses import JSONResponse
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi import Header
 from fastapi.responses import RedirectResponse
+from sqlalchemy.orm import sessionmaker, Session
 
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+from db.session import get_user_session, get_event_session
 
-from src.usr_model import User
-from src.event_model import Events
+from src.usr_model import User as UserBase
+from src.event_model import Events as EventBase
 from src.hasher import Hasher
 from src.auth import create_access_token, decode_access_token
-from src.config import SECRET_KEY,  ALGORITHM
-from src.usr_model import Base as UserBase
-from src.startup import create_admin_user
+from src.config import SECRET_KEY, ALGORITHM
+from src.startup import create_admin_user, create_events
+
+from calendar_router import calendar_router
+
+from datetime import date
+
+# Database setup
+USER_DATABASE_URL = "sqlite:///./user_database.db"
+EVENT_DATABASE_URL = "sqlite:///./event_database.db"
+
+engine_usr = create_engine(USER_DATABASE_URL, connect_args={"check_same_thread": False})
+engine_event = create_engine(EVENT_DATABASE_URL, connect_args={"check_same_thread": False})
+
+SessionLocal_usr = sessionmaker(autocommit=False, autoflush=False, bind=engine_usr)
+SessionLocal_event = sessionmaker(autocommit=False, autoflush=False, bind=engine_event)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    db: Session = SessionLocal()
+    db_usr: Session = SessionLocal_usr()      # Session for user database
+    db_event: Session = SessionLocal_event()  # Session for event database
     try:
-        create_admin_user(db)
+        organizer_uid = create_admin_user(db_usr)  # Use user session
+        if organizer_uid:  # Ensure organizer_uid is not None
+            create_events(db_event, organizer_uid)  # Use event session
     finally:
-        db.close()
+        db_usr.close()
+        db_event.close()
     yield
-        
-        
+
+# OAuth Setup
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+# Create tables in the respective databases
+UserBase.metadata.create_all(bind=engine_usr)
+EventBase.metadata.create_all(bind=engine_event)
+
 router = APIRouter()
 
 app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory='templates')
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-from calendar_router import calendar_router
 app.include_router(calendar_router)
-
-#database setup
-USER_DATABASE_URL =  "sqlite:///./user_database.db"
-EVENT_DATABASE_URL = "sqlite:///./event_database.db"
-
-engine_usr = create_engine(USER_DATABASE_URL, connect_args={"check_same_thread": False})
-engine_event = create_engine(EVENT_DATABASE_URL, connect_args={"check_same_thread": False})
-
-# OATH Setup
-# Secret key (keep it secret in production!)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-# Create both databases. Note if pyc files exist with older existing users
-# the users will still exist if this is remade. Delete the pyc files and the databases
-# to clearly wipe the database
-UserBase.metadata.create_all(bind=engine_usr)
-UserBase.metadata.create_all(bind=engine_event)
-
-from db.session import get_session, SessionLocal, engine_usr, engine_event
 
 async def get_token_optional(authorization: str = Header(default=None)):
     if not authorization:
@@ -71,8 +76,7 @@ async def get_token_optional(authorization: str = Header(default=None)):
         return None
     return token
 
-
-def get_current_user(request: Request, db: Session = Depends(get_session)):
+def get_current_user(request: Request, db: Session = Depends(get_user_session)):
     token = request.cookies.get("access_token")
     if not token:
         return None
@@ -85,30 +89,24 @@ def get_current_user(request: Request, db: Session = Depends(get_session)):
     except JWTError:
         return None
 
-    return db.query(User).filter(User.uid == int(user_id)).first()
+    return db.query(UserBase).filter(UserBase.uid == int(user_id)).first()
 
 # -----------------------------
 # Home Page
 # -----------------------------
-@router.get("/")
-def get(session: Session = Depends(get_session), current_user: Optional[User] = Depends(get_current_user)):
-    return {"message": f"Hello, {current_user.username}!"}
-
-from datetime import date
-
 @app.get("/", response_class=HTMLResponse)
 def main(
     request: Request, 
-    db: Session = Depends(get_session), 
-    current_user: Optional[User] = Depends(get_current_user)
+    db_event: Session = Depends(get_event_session), 
+    current_user: Optional[UserBase] = Depends(get_current_user)
 ):
     today = date.today()
     events_today = []
 
     if current_user:
-        events_today = db.query(Events).filter(
-            Events.owner_id == current_user.uid,
-            Events.date == today
+        events_today = db_event.query(EventBase).filter(
+            EventBase.owner_uid == current_user.uid,
+            EventBase.date == today
         ).all()
 
     return templates.TemplateResponse('home.html', {
@@ -129,15 +127,15 @@ def register_user(
     new_username: str = Form(...),
     new_password: str = Form(...),
     email: str = Form(...),
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_user_session)
 ):
-    existing_user = db.query(User).filter(User.username == new_username).first()
+    existing_user = db.query(UserBase).filter(UserBase.username == new_username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already taken")
 
     hashed_pw = Hasher.get_password_hash(new_password)
 
-    new_user = User(
+    new_user = UserBase(
         username=new_username,
         email=email,
         password_hashed=hashed_pw,
@@ -161,14 +159,12 @@ def register_user(
     )
     return response
 
-from fastapi.responses import JSONResponse
-
 @app.post("/token")
 def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_user_session)
 ):
-    user = db.query(User).filter(User.username == form_data.username).first()
+    user = db.query(UserBase).filter(UserBase.username == form_data.username).first()
     if not user or not Hasher.verify_password(form_data.password, user.password_hashed):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
@@ -189,11 +185,12 @@ def logout():
     response = RedirectResponse(url="/", status_code=303)
     response.delete_cookie("access_token")
     return response
+
 # -----------------------------
 # Profile Settings
 # -----------------------------
 @app.get("/profile/home", response_class=HTMLResponse)
-def prof_main(request: Request, current_user: Optional[User] = Depends(get_current_user)):
+def prof_main(request: Request, current_user: Optional[UserBase] = Depends(get_current_user)):
     if current_user is None:
         return RedirectResponse(url="/login")
     
@@ -211,13 +208,13 @@ def update_profile_settings(
     username: str = Form(...), 
     email: str = Form(...), 
     password: str = Form(...), 
-    db: Session = Depends(get_session),
-    current_user: Optional[User] = Depends(get_current_user)
+    db: Session = Depends(get_user_session),
+    current_user: Optional[UserBase] = Depends(get_current_user)
 ):
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
-    if db.query(User).filter(User.username == username, User.uid != current_user.uid).first():
+    if db.query(UserBase).filter(UserBase.username == username, UserBase.uid != current_user.uid).first():
         raise HTTPException(status_code=400, detail="Username already taken")
 
     current_user.username = username
@@ -246,7 +243,6 @@ def org_create_event():
 @app.get("/organizer/delete_event")
 def org_del_event():
     return
-
 
 if __name__ == "__main__":
     import uvicorn

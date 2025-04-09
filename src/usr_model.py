@@ -1,5 +1,5 @@
 from sqlalchemy import Integer, String, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, declarative_base
 from sqlalchemy.ext.declarative import as_declarative
 from dataclasses import dataclass
 from typing import ClassVar
@@ -7,11 +7,9 @@ from typing import ClassVar
 from sqlalchemy import Boolean
 
 
-@as_declarative()
-class Base:
-    pass
+EventBase = declarative_base()
 
-class User(Base):
+class User(EventBase):
     __tablename__ = "users"
     uid: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
@@ -21,7 +19,7 @@ class User(Base):
     last_name: Mapped[str] = mapped_column(String, nullable=False)
     created_at:Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
     
-    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_organizer: Mapped[bool] = mapped_column(Boolean, default=False)
 
     about: Mapped[str] = mapped_column(String, nullable=True)
     

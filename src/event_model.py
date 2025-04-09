@@ -1,13 +1,14 @@
 from sqlalchemy.orm import Mapped, mapped_column, declarative_base
 from sqlalchemy import String, Integer, DateTime
 
-Base = declarative_base()
+EventBase = declarative_base()
 
-class Events(Base):
+class Events(EventBase):
     __tablename__ = "events"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    uid: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    owner_uid: Mapped[int] = mapped_column(Integer, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False)
+    date: Mapped[str] = mapped_column(DateTime, nullable=True)
     start_time: Mapped[str] = mapped_column(DateTime, nullable=False)
     end_time: Mapped[str] = mapped_column(DateTime, nullable=True)
     location: Mapped[str] = mapped_column(String, nullable=True)

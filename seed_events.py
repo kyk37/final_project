@@ -13,6 +13,8 @@ Base.metadata.create_all(bind=engine)
 sample_events = [
     Events(
         title="Intro to Python",
+        owner_uid = 1,
+        date=datetime.now(),
         start_time=datetime.now(),
         end_time=datetime.now() + timedelta(hours=1),
         location="Room 101",
@@ -21,6 +23,8 @@ sample_events = [
     ),
     Events(
         title="Group Project Meeting",
+        owner_uid = 2,
+        date = datetime.now(),
         start_time=datetime.now() + timedelta(days=1, hours=2),
         end_time=datetime.now() + timedelta(days=1, hours=4),
         location="Library B12",
@@ -29,6 +33,8 @@ sample_events = [
     ),
     Events(
         title="Yoga Session",
+        owner_uid = 2,
+        date = datetime.now(),
         start_time=datetime.now() + timedelta(days=2, hours=1),
         end_time=datetime.now() + timedelta(days=2, hours=2),
         location="Wellness Center",
