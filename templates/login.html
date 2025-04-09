@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+
+<body>
+    <div class="page-container">
+    <div class="header">
+        <div class="header-left">
+          <h1>Event Manager</h1>
+        </div>
+        <div class="header-right">
+          <a href="/" class="login-btn">Home</a>
+        </div>
+      </div>
+
+    <div class="login-wrapper">
+      <div class="login-container">
+        <h2>Login</h2>
+
+          <form id="loginForm">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+          
+            <div class="button-row">
+              <button type="button" class="new-user-btn">New User</button>
+              <button type="submit" class="submit-btn">Log In</button>
+            </div>
+          </form>
+            
+            <div id="newUserModal" class="modal">
+              <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Create New Account</h3>
+                <form id="registerForm">
+                  <input type="text" name="new_username" placeholder="Username" required>
+                  <input type="password" name="new_password" placeholder="Password" required>
+                  <input type="email" name="email" placeholder="Email" required>
+                  <button type="submit">Register</button>
+                </form>
+                <p id="registerMessage" style="margin-top: 10px;"></p>
+              </div>
+            </div>
+
+        </form>
+      </div>
+    </div>
+    
+      <div class="footer">
+        <a>© copyright Does not Exist </a>
+      </div>
+    </div>
+
+    </div>
+
+    <script>
+      // ----- Modal and Registration Logic -----
+      const modal = document.getElementById("newUserModal");
+      const openBtn = document.querySelector(".new-user-btn");
+      const closeBtn = modal.querySelector(".close");
+      const registerForm = document.getElementById("registerForm");
+      const messageBox = document.getElementById("registerMessage");
+    
+      openBtn.onclick = () => {
+        modal.style.display = "block";
+      };
+    
+      closeBtn.onclick = () => {
+        modal.style.display = "none";
+      };
+    
+      window.onclick = (e) => {
+        if (e.target === modal) {
+          modal.style.display = "none";
+        }
+      };
+    
+      registerForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+    
+        const formData = new FormData(registerForm);
+        const username = formData.get("new_username");
+        const password = formData.get("new_password");
+    
+        try {
+          const registerResponse = await fetch("/register", {
+            method: "POST",
+            body: formData
+          });
+    
+          if (!registerResponse.ok) {
+            const error = await registerResponse.json();
+            messageBox.style.color = "red";
+            messageBox.textContent = error.detail || "Registration failed.";
+            return;
+          }
+    
+          messageBox.style.color = "lightgreen";
+          messageBox.textContent = "Registered! Logging you in...";
+    
+          const loginResponse = await fetch("/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ username, password })
+          });
+    
+          if (!loginResponse.ok) {
+            messageBox.style.color = "red";
+            messageBox.textContent = "Registration worked, but login failed.";
+            return;
+          }
+    
+          const loginData = await loginResponse.json();
+          localStorage.setItem("access_token", loginData.access_token);
+    
+          // ✅ Redirect to profile page after successful registration/login
+          window.location.href = "/profile/home";
+    
+        } catch (err) {
+          messageBox.style.color = "red";
+          messageBox.textContent = "Something went wrong.";
+        }
+      });
+    
+      // ----- Login Form Logic -----
+      const loginForm = document.getElementById("loginForm");
+      if (loginForm) {
+        loginForm.addEventListener("submit", async function (e) {
+          e.preventDefault();
+    
+          const formData = new FormData(loginForm);
+          const username = formData.get("username");
+          const password = formData.get("password");
+    
+          try {
+            const loginResponse = await fetch("/token", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({ username, password })
+            });
+    
+            if (!loginResponse.ok) {
+              alert("Login failed. Please check your credentials.");
+              return;
+            }
+    
+            const loginData = await loginResponse.json();
+            console.log("✅ Login success. Redirecting...");
+            console.log("Token:", loginData.access_token);
+            localStorage.setItem("access_token", loginData.access_token);
+
+            window.location.href = "/profile/home";
+    
+          } catch (err) {
+            alert("Login error. Please try again.");
+            console.error(err);
+          }
+        });
+      }
+    </script>
+    
+    
+    
+    
+  </body>
+</html>
