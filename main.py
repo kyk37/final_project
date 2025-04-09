@@ -73,9 +73,9 @@ async def lifespan(app: FastAPI):
 # OAuth Setup
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-
+# Setup APIRouter
 router = APIRouter()
-
+# Setup FastAPI
 app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory='templates')
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -246,10 +246,19 @@ def prof_events(request: Request):
 def prof_edit(request: Request):
     return templates.TemplateResponse("profile_edit.html", {"request": request})
 
+
+# -----------------------------
+# Calendar
+# -----------------------------
+
 @app.get("/profile/calendar")
 def prof_calendar(request: Request):
     return templates.TemplateResponse("profile_calendar.html", {"request": request})
 
+
+# -----------------------------
+# Database Creation/Deletion
+# -----------------------------
 @app.get("/organizer/create_event")
 def org_create_event():
     return
