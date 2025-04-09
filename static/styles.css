@@ -251,6 +251,7 @@ html{
   margin-top: 10px;
   margin-bottom: 15px;
   background-color: var(--background-800);
+  
 }
 
 .search-centered {
@@ -292,6 +293,7 @@ html{
   border: 1px solid #ccc;
   border-radius: 4px 0 0 4px;
   outline: none;
+  color: var(--text)
 }
 
 
@@ -475,7 +477,23 @@ html{
   background-color: var(--primary-600);
 }
 
+/* Password Reset Page text color */
+.login-search input::placeholder {
+  color:var(--text)
+}
 
+.login-search input {
+  color:var(--text)
+}
+.search-box input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid var(--background-600);
+  background-color: var(--background-700);
+  color: var(--text);
+  border-radius: 6px;
+}
 
 @media only screen and (max-width: 770px) {
   /* Home Page*/
