@@ -12,34 +12,56 @@ def create_admin_user(db: Session):
         print("⚠️ bcrypt is broken — reinstall with pip!")
         return
 
+    # Define user credentials
     admin_username = "admin"
     admin_email = "admin@admin.com"
     admin_password = "admin"
 
-    # Check if admin already exists
-    existing_user = db.query(User).filter(User.username == admin_username).first()
-    if existing_user:
-        print("Admin user already exists, skipping creation.")
-        return existing_user.uid  # Return the ID for potential use
+    test_username = "test"
+    test_email = "test@test.com"
+    test_password = "test"
 
-    # Hash the admin password with bcrypt
-    salt = bcrypt.gensalt(rounds=12)  # 12 rounds is a good default
-    hashed_password = bcrypt.hashpw(admin_password.encode('utf-8'), salt)
+    # Check if admin user exists
+    existing_admin = db.query(User).filter(User.username == admin_username).first()
+    if existing_admin:
+        admin_user = existing_admin
+    else:
+        # Create admin user with its own salt
+        salt_admin = bcrypt.gensalt(rounds=12)
+        hashed_admin_password = bcrypt.hashpw(admin_password.encode('utf-8'), salt_admin)
+        admin_user = User(
+            username=admin_username,
+            email=admin_email,
+            password_hashed=hashed_admin_password,
+            first_name="Admin",
+            last_name="User",
+            is_organizer=True
+        )
+        db.add(admin_user)
 
-    # Create and add new admin user
-    admin_user = User(
-        username=admin_username,
-        email=admin_email,
-        password_hashed=hashed_password,  # Store as bytes; adjust if your model expects a string
-        first_name="Admin",
-        last_name="User",
-        is_organizer=True
-    )
-    db.add(admin_user)
+    # Check if test user exists
+    existing_test = db.query(User).filter(User.username == test_username).first()
+    if not existing_test:
+        # Create test user with its own salt
+        salt_test = bcrypt.gensalt(rounds=12)
+        hashed_test_password = bcrypt.hashpw(test_password.encode('utf-8'), salt_test)
+        test_user = User(
+            username=test_username,  # Fixed typo from original (was test_user)
+            email=test_email,
+            password_hashed=hashed_test_password,
+            first_name="Test",
+            last_name="User",
+            is_organizer=False
+        )
+        db.add(test_user)
+
+    # Commit all changes to the database
     db.commit()
-    db.refresh(admin_user)  # Refresh to get the assigned ID
-    print("Organizer (admin) user created with ID:", admin_user.id)
-    return admin_user.uid  # Return ID for use in event creation
+
+    # Log and return the admin user's UID
+    print("Organizer (admin) user with ID:", admin_user.uid)
+    return admin_user.uid
+
 
 def create_events(db: Session, organizer_uid):
     sample_events = [
