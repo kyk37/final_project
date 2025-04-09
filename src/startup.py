@@ -5,13 +5,6 @@ from src.event_model import Events
 from datetime import datetime, timedelta
 
 def create_admin_user(db: Session):
-    # Check bcrypt version for debugging
-    try:
-        print("bcrypt version:", bcrypt.__version__)
-    except AttributeError:
-        print("⚠️ bcrypt is broken — reinstall with pip!")
-        return
-
     # Define user credentials
     admin_username = "admin"
     admin_email = "admin@admin.com"
