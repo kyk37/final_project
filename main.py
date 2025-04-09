@@ -236,18 +236,34 @@ def get_create_event(request: Request):
 
 @app.post("/organizer/create_event")
 def post_create_event(
-    request: Request,
     title: str = Form(...),
     description: str = Form(None),
     event_date: str = Form(None),
     db: Session = Depends(get_session)
 ):
-    # Create a new event record using the Events model with event_date defined
-    new_event = Events(title=title, description=description, event_date=event_date)
+    """
+    1) Create a new event in the database
+    2) Append the event info to created_events.txt
+    3) Redirect to /profile/events
+    """
+    # 1) Insert event into DB
+    new_event = Events(
+        title=title,
+        description=description,
+        event_date=event_date
+    )
     db.add(new_event)
     db.commit()
     db.refresh(new_event)
-    # Redirect the user back to the profile events page after storing the new event
+
+    # 2) Write details to text file
+    with open("created_events.txt", "a", encoding="utf-8") as f:
+        f.write(f"Title: {title}\n")
+        f.write(f"Description: {description}\n")
+        f.write(f"Date: {event_date}\n")
+        f.write("----------\n")
+
+    # 3) Redirect to /profile/events
     return RedirectResponse(url="/profile/events", status_code=status.HTTP_303_SEE_OTHER)
 
 
