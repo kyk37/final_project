@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Event</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="page-container">
+    <div class="header">
+      <div class="header-left">
+        <h1>Event Manager</h1>
+      </div>
+      <div class="header-right">
+        <a href="/" class="login-btn">Home</a>
+      </div>
+    </div>
+    <div class="content">
+      <h1>Create New Event</h1>
+      <form action="/organizer/create_event" method="post">
+        <label for="title">Event Title:</label>
+        <input type="text" id="title" name="title" required><br>
+        
+        <label for="description">Event Description:</label>
+        <textarea id="description" name="description"></textarea><br>
+        
+        <label for="event_date">Event Date:</label>
+        <input type="date" id="event_date" name="event_date"><br>
+        
+        <button type="submit">Create Event</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
