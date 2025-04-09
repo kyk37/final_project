@@ -1,3 +1,4 @@
+import os
 from pydantic import BaseModel
 from typing import Annotated, Optional
 from contextlib import asynccontextmanager
@@ -34,6 +35,10 @@ from datetime import date
 USER_DATABASE_URL = "sqlite:///./user_database.db"
 EVENT_DATABASE_URL = "sqlite:///./event_database.db"
 
+# File paths for the SQLite databases
+USER_DB_FILE = "./user_database.db"
+EVENT_DB_FILE = "./event_database.db"
+
 engine_usr = create_engine(USER_DATABASE_URL, connect_args={"check_same_thread": False})
 engine_event = create_engine(EVENT_DATABASE_URL, connect_args={"check_same_thread": False})
 
@@ -42,6 +47,18 @@ SessionLocal_event = sessionmaker(autocommit=False, autoflush=False, bind=engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Delete existing database files if they exist
+    if os.path.exists(USER_DB_FILE):
+        os.remove(USER_DB_FILE)
+        print(f"Deleted existing database file: {USER_DB_FILE}")
+    if os.path.exists(EVENT_DB_FILE):
+        os.remove(EVENT_DB_FILE)
+        print(f"Deleted existing database file: {EVENT_DB_FILE}")
+        
+    # Create tables in the respective databases
+    UserBase.metadata.create_all(bind=engine_usr)
+    EventBase.metadata.create_all(bind=engine_event)
+
     db_usr: Session = SessionLocal_usr()      # Session for user database
     db_event: Session = SessionLocal_event()  # Session for event database
     try:
@@ -56,9 +73,6 @@ async def lifespan(app: FastAPI):
 # OAuth Setup
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# Create tables in the respective databases
-UserBase.metadata.create_all(bind=engine_usr)
-EventBase.metadata.create_all(bind=engine_event)
 
 router = APIRouter()
 
