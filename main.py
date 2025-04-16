@@ -31,6 +31,8 @@ from calendar_router import calendar_router
 
 from datetime import date
 
+from db.base import Base
+
 # Database setup
 USER_DATABASE_URL = "sqlite:///./user_database.db"
 EVENT_DATABASE_URL = "sqlite:///./event_database.db"
@@ -54,10 +56,10 @@ async def lifespan(app: FastAPI):
     if os.path.exists(EVENT_DB_FILE):
         os.remove(EVENT_DB_FILE)
         print(f"Deleted existing database file: {EVENT_DB_FILE}")
-        
+
     # Create tables in the respective databases
-    UserBase.metadata.create_all(bind=engine_usr)
-    EventBase.metadata.create_all(bind=engine_event)
+    Base.metadata.create_all(bind=engine_usr)
+    Base.metadata.create_all(bind=engine_event)
 
     db_usr: Session = SessionLocal_usr()      # Session for user database
     db_event: Session = SessionLocal_event()  # Session for event database
@@ -128,6 +130,26 @@ def main(
         'username': current_user.username if current_user else None,
         'events_today': events_today
     })
+
+@app.get("/event/{event_id}", response_class=HTMLResponse)
+def event_detail(
+    request: Request,
+    event_id: int,
+    db_event: Session = Depends(get_event_session),
+    current_user: UserBase = Depends(get_current_user)
+):
+    event = db_event.query(EventBase).filter(EventBase.uid == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    return templates.TemplateResponse("event_detail.html", {
+        "request": request,
+        "event": event,
+        "username": current_user.username if current_user else None,
+        "attendee_count": len(event.attendees),
+        "is_signed_up": current_user in event.attendees if current_user else False
+    })
+
 
 # -----------------------------
 # LOGIN AND REGISTRATION
@@ -255,6 +277,28 @@ def prof_edit(request: Request):
 def prof_calendar(request: Request):
     return templates.TemplateResponse("profile_calendar.html", {"request": request})
 
+# -----------------------------
+# Search
+# -----------------------------
+
+@app.get("/search", response_class=HTMLResponse)
+def search_events(request: Request, search: Optional[str] = "", db: Session = Depends(get_event_session)):
+    today = date.today()
+    query = db.query(EventBase).filter(EventBase.date >= today)
+
+    if search:
+        query = query.filter(
+            EventBase.title.ilike(f"%{search}%") |
+            EventBase.description.ilike(f"%{search}%") |
+            EventBase.tags.ilike(f"%{search}%")
+        )
+
+    matched_events = query.all()
+    return templates.TemplateResponse("home.html", {
+        "request": request,
+        "events_today": matched_events,
+        "username": get_current_user(request, db),
+    })
 
 # -----------------------------
 # Database Creation/Deletion

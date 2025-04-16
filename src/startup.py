@@ -65,7 +65,10 @@ def create_events(db: Session, organizer_uid):
             start_time=datetime.now(),
             end_time=datetime.now() + timedelta(hours=1),
             location="Room 101",
-            type="Class",
+            event_type="Class",
+            organizer="CS Department",
+            tags="tech,beginner,python",
+            image_urls="/static/img/python_poster.png",
             description="CS class for beginners"
         ),
         Events(
@@ -75,7 +78,10 @@ def create_events(db: Session, organizer_uid):
             start_time=datetime.now() + timedelta(days=1, hours=2),
             end_time=datetime.now() + timedelta(days=1, hours=4),
             location="Library B12",
-            type="Meeting",
+            event_type="Meeting",
+            organizer="Project Team",
+            tags="project,team,collaboration",
+            image_urls="/static/img/project_meeting.png",
             description="Team sync for final project"
         ),
         Events(
@@ -85,7 +91,10 @@ def create_events(db: Session, organizer_uid):
             start_time=datetime.now() + timedelta(days=2, hours=1),
             end_time=datetime.now() + timedelta(days=2, hours=2),
             location="Wellness Center",
-            type="Event",
+            event_type="Gym Class",
+            organizer="Student Wellness Club",
+            tags="health,wellness,yoga",
+            image_urls="/static/img/yoga_class.jpg",
             description="Relax and recharge"
         )
     ]
