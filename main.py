@@ -552,7 +552,6 @@ def post_create_event(
         f.write(f"Date: {event_date}\n")
         f.write("----------\n")
 
-
     return templates.TemplateResponse("create_event.html", {"request": request})
 
 @app.get("/organizer/delete_event")

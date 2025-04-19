@@ -148,6 +148,9 @@
         }
       });
       calendar.render();
+      window.addEventListener("resize", () => {
+        calendar.updateSize();
+      });
     });
   </script>
   
@@ -163,6 +166,7 @@
           right: 'next'
         },
         height: 'auto',
+        aspectRatio: 1.1, 
         contentHeight: 300,
         events: '/api/user-events',
         dayMaxEventRows: true,

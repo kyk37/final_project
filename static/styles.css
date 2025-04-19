@@ -234,6 +234,7 @@ html{
   box-shadow: 0 2px 6px var(--background-900);
 }
 
+
 .login-wrapper {
   flex: 1;
   display: flex;
@@ -701,8 +702,15 @@ html{
   font-weight: 600;
 }
 
-
-
+#mini-calendar,
+#mini-calendar .fc,
+#mini-calendar .fc-scrollgrid,
+#mini-calendar .fc-view-harness {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  box-sizing: border-box;
+}
 
 @media only screen and (max-width: 770px) {
 
@@ -721,13 +729,20 @@ html{
     max-height: none; 
   }
 
-  .left, .menu, .main, .right {
+  .left, .menu, .main {
     width: 100%;
   }
+
   /* Login Screen*/
   .button-row {
     display: flex;
     text-align: center;
   }
 
+  .right {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+  }
 }
