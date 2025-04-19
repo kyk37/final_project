@@ -93,22 +93,25 @@
 html, body {
   height: 100%;
   margin: 0;
-  min-height: 100vh;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--background);
-}
+    overflow-x: hidden; /* Hide horizontal scroll if needed */
+    overflow-y: auto;   /* Allow vertical scrolling */
+  }
+
+
+
 .page-container {
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 10px;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  flex: 1;
 }
 
+
+.content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+}
 
 body {
   font-family: Verdana, Arial, Helvetica, sans-serif;
@@ -214,13 +217,10 @@ html{
 }
 
 .main {
-  width: 60%;
-  padding: 0 2px;
-  margin-top: 7px;
-  margin: 3px 3px; 
-  border-radius: 5px;
-  border: 1px solid var(--background-600);
-  box-shadow: 0 2px 6px var(--background-900);
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .right {
@@ -245,14 +245,12 @@ html{
 }
 
 .search-box {
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  padding: 15px;
-  margin-top: 10px;
-  margin-bottom: 15px;
-  background-color: var(--background-800);
-  
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
+
 
 .search-centered {
   width: 100%;
@@ -343,7 +341,15 @@ html{
 }
 
 /* Login Page */
-
+.alert {
+  background-color: var(--text-100);  /* very light gray/blue */
+  color: var(--background-900);       /* very dark for contrast */
+  border-left: 4px solid var(--primary-500);
+  padding: 12px;
+  border-radius: 6px;
+  margin: 1em 0;
+  font-weight: bold;
+}
 
 .login-container {
   background-color: var(--background-800);
@@ -495,11 +501,189 @@ html{
   border-radius: 6px;
 }
 
+
+/* Basic Profile Setting */
+.textarea {
+  flex: 1;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid var(--background-600);
+  background-color: var(--background-700);
+  color: var(--text);
+  height: 100px;
+  resize: vertical;
+}
+
+
+/* Edit Profile */
+.form-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 15px;
+}
+
+.form-row label {
+  width: 120px;
+  min-width: 120px;
+  font-weight: bold;
+  text-align: right;
+  margin-right: 10px;
+}
+
+.form-row input[type="text"],
+.form-row input[type="email"],
+.form-row input[type="password"] {
+  flex: 1;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc; /* Or use var(--background-600) if you want theme consistency */
+}
+
+
+
+
+.cancel-btn {
+  display: inline-block;
+  padding: 12px;
+  font-size: 16px;
+  background-color: var(--background-300);
+  color: var(--text);
+  border: 2px solid var(--text-200);
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+.cancel-btn:hover {
+  background-color: var(--background-400);
+}
+
+
+/* Events Page */
+.search-box {
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  background-color: var(--background-800);
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;       /* Constrain the height */
+  overflow: hidden;        /* Prevent the box from growing */
+}
+
+.scrollable-event-list {
+  max-height: 250px;
+  overflow-y: scroll;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  padding-right: 10px;
+  margin-top: 10px;
+  background-color: var(--background-800);
+  border: 1px solid var(--background-600);
+  border-radius: 6px;
+  box-sizing: border-box; /* Include padding in width/height */
+  scroll-behavior: smooth; /* Smooth scrolling */
+}
+
+/* Optional: Pretty scroll styling */
+.scrollable-event-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollable-event-list::-webkit-scrollbar-thumb {
+  background-color: var(--primary-500);
+  border-radius: 5px;
+}
+
+.scrollable-event-list::-webkit-scrollbar-track {
+  background-color: var(--background-700);
+}
+
+/* Each event block */
+.event-card {
+  padding: 10px;
+  margin-bottom: 8px;
+  background-color: var(--background-700);
+  border: 1px solid var(--background-600);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px var(--background-900);
+  color: var(--text);
+}
+
+
+/* Calendar */
+
+.calendar-section {
+  background-color: var(--background-800);
+  padding: 20px;
+  border-radius: 10px;
+  color: var(--text);
+  border: 1px solid var(--background-600);
+  overflow: visible;
+  height: auto;
+  margin-top: 15px;
+}
+
+.fc .fc-col-header-cell {
+  background-color: var(--background-700); /* Match your dark background */
+  color: var(--text-100); /* Light text for readability */
+  border: 1px solid var(--background-600); /* Optional border for separation */
+}
+
+/* Adjust header padding and text alignment if needed */
+.fc .fc-col-header-cell-cushion {
+  padding: 10px;
+  text-align: center;
+  display: block;
+  font-weight: bold;
+  color: var(--text-100); /* Lighten the header text */
+  background-color: transparent; /* ensure no conflicting white background */
+}
+
+/* Lighten day numbers in calendar cells */
+.fc .fc-daygrid-day-number {
+  color: var(--text-100); /* Lighter text for visibility */
+  font-weight: bold;
+}
+
+/* Optional: Lighten the cell background slightly */
+.fc .fc-daygrid-day {
+  background-color: var(--background-800); /* Or --background-600 for more contrast */
+  border: 1px solid var(--background-600);
+}
+
+/* Change background on hover */
+.fc .fc-daygrid-day:hover {
+  background-color: var(--background-600);
+  cursor: pointer;
+}
+
+/* Make headers (Sun, Mon...) more visible */
+.fc .fc-col-header-cell-cushion {
+  color: var(--text-100);
+  font-weight: 600;
+}
+
+
+
+
 @media only screen and (max-width: 770px) {
-  /* Home Page*/
+
   /* For mobile phones: */
   .content {
     flex-direction: column;
+    overflow: visible; 
+  }
+
+  .main {
+    width: 100%;
+    overflow: visible;
+  }
+
+  .search-box {
+    max-height: none; 
   }
 
   .left, .menu, .main, .right {

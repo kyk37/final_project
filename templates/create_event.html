@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html data-theme="dark">
-
+  
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Event Management Website</title>
   <link rel="stylesheet" href="/static/styles.css">
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <title>Event Management Website</title>
 </head>
 
 <body>
@@ -29,51 +29,28 @@
         <a href="/profile/security" class="menuitem">Security</a>
         <a href="/profile/calendar" class="menuitem">Calendar</a>
         <a href="/profile/events" class="menuitem">Events Joined</a>
-        <!-- New Create Event button -->
         {% if is_organizer %}
         <a href="/organizer/create_event" class="menuitem">Create Event</a>
-        {% endif %}
+        {% endif %}  
         <div><br></div>
         <a href="#" class="menuitem" onclick="logout()">Logout</a>
-
-        </div>      
+      </div>
     </div>
 
       <!-- Main Section -->
       <div class="main">
         <div class="search-section">
-          <h2 style="text-align:center;">Events Your Attending</h2>
+          <h2 style="text-align:center;">Create Event</h2> <!--Username can go here-->
+
           <div class="search-box">
-            <div class="scrollable-event-list">
-              {% if user_events %}
-                {% for event in user_events %}
-                <div class="event-card">
-                  <strong style="font-size: 1.2em;">{{ event.title }}</strong><br>
-                  <span> <b>Organizer: </b> {{event.organizer}}<br>
-                  <span><b>Event Created: </b> {{ event.date.strftime('%Y-%m-%d') }} <br>
-                  <span><b>Start Time: </b> {{ event.start_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
-                   <span><b>End Time: </b> {{ event.end_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
+            <h3> Settings to edit here, and adjust the database</h3>
 
-                  <span> <b>Location: </b> {{ event.location }}</span> <br>
-                  <span><b>Description: </b> {{event.description}} <br>
-                  <span><b>Tags: </b> {{event.tags}}
-                </div>
-                {% endfor %}
-              {% else %}
-                <p style="color: var(--text-300); font-style: italic;">No events joined yet.</p>
-              {% endif %}
-            </div>
           </div>
-
-
         </div>
       </div>
-
-
     </div>
 
-
-
+    <!-- Footer -->
     <div class="footer">
       <div class="botnav">
         <a class="active" href="#home">Home</a>
@@ -83,6 +60,8 @@
         <a>© copyright Does not Exist </a>
       </div>
     </div>
+    
+  </div>
 
   
     <script>
@@ -92,16 +71,17 @@
         body.setAttribute('data-theme', isDark ? 'light' : 'dark');
       };
 
-        function logout() {
-          fetch("/logout", {
-            method: "POST"
-          }).then(() => {
-            window.location.href = "/login";
-          }).catch(err => {
-            alert("Logout failed.");
-            console.error(err);
-          });
-        }
+      function logout() {
+        fetch("/logout", {
+          method: "POST"
+        }).then(() => {
+          window.location.href = "/login";
+        }).catch(err => {
+          alert("Logout failed.");
+          console.error(err);
+        });
+      }
+
             
     </script>
 </div>

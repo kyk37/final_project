@@ -24,11 +24,18 @@
     <div class="left">
       <h2 style="text-align:center;">Account Settings</h2>
       <div class="menu">
-        <a href="../profile/home" class="menuitem">Home</a>
-        <a href="../profile/edit" class="menuitem">Edit Profile</a>
-        <a href="../profile/security" class="menuitem">Security</a>
-        <a href="../profile/events" class="menuitem">Events Joined</a>
+        <a href="/profile/home" class="menuitem">Home</a>
+        <a href="/profile/edit" class="menuitem">Edit Profile</a>
+        <a href="/profile/security" class="menuitem">Security</a>
+        <a href="/profile/calendar" class="menuitem">Calendar</a>
+        <a href="/profile/events" class="menuitem">Events Joined</a>
+        {% if is_organizer %}
+        <a href="/organizer/create_event" class="menuitem">Create Event</a>
+        {% endif %}       
+        <div><br></div>
         <a href="#" class="menuitem" onclick="logout()">Logout</a>
+
+
       </div>
     </div>
 
@@ -38,8 +45,69 @@
           <h2 style="text-align:center;">Profile Settings</h2> <!--Username can go here-->
 
           <div class="search-box">
-            <h3> Settings to edit here, and adjust the database</h3>
+            
+            <form action="/profile/edit" method="post", enctype="multipart/form-data">
+              <!--css issues with Search Box: Forcing HTML so the name is beside the value-->
+              <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <label for="first_name" style="width: 120px; min-width: 120px; font-weight: bold; text-align: right; margin-right: 10px;">
+                  First Name:
+                </label>
+                <input type="text" id="first_name" name="first_name" value="{{ first_name }}" required
+                       style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <label for="last_name" style="width: 120px; min-width: 120px; font-weight: bold; text-align: right; margin-right: 10px;">
+                  Last Name:
+                </label>
+                <input type="text" id="last_name" name="last_name" value="{{ last_name }}"
+                       style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <label for="email" style="width: 120px; min-width: 120px; font-weight: bold; text-align: right; margin-right: 10px;">
+                  Email:
+                </label>
+                <input type="text" id="email" name="email" value="{{ email }}"
+                       style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+              </div>
 
+              <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <label for="profile_picture" style="width: 120px; min-width: 120px; font-weight: bold; text-align: right; margin-right: 10px;">
+                  Profile Picture:
+                </label>
+                <input type="file" id="profile_picture" name="profile_picture" accept="image/*" 
+                       style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+              </div>
+
+              <div style="display: flex; align-items: flex-start; margin-bottom: 12px;">
+                <label for="about" style="width: 120px; min-width: 120px; font-weight: bold; text-align: right; margin-right: 10px; margin-top: 5px;">
+                  About:
+                </label>
+                <textarea id="about" name="about"
+                  style="
+                    flex: 1;
+                    padding: 8px;
+                    border-radius: 4px;
+                    border: 1px solid #ccc;
+                    height: 100px;
+                    resize: vertical;
+                    background-color: var(--background-700);
+                    color: var(--text);
+                  ">{{ about }}</textarea>
+              </div>
+              
+              
+
+
+
+              <div class="button-row">
+                <button type="submit" class="submit-btn">Save Changes</button>
+                <div class="header-right">
+                  <a href="../profile/home" class="login-btn">Cancel</a>
+                </div>
+              </div>
+              
           </div>
         </div>
       </div>

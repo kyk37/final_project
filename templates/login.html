@@ -22,6 +22,10 @@
     <div class="login-wrapper">
       <div class="login-container">
         <h2>Login</h2>
+        
+        {% if message %}
+          <div class="alert", style="color:red">{{ message }}</div>
+        {% endif %}
 
           <form id="loginForm">
             <input type="text" name="username" placeholder="Username" required>
@@ -118,7 +122,7 @@
           const loginData = await loginResponse.json();
           localStorage.setItem("access_token", loginData.access_token);
     
-          // ✅ Redirect to profile page after successful registration/login
+          // Redirect to profile page after successful registration/login
           window.location.href = "/profile/home";
     
         } catch (err) {

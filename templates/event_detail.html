@@ -1,130 +1,51 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <title>{{ event.title }}</title>
-  <link rel="stylesheet" href="/static/styles.css">
-  <style>
-    .event-wrapper {
-      display: flex;
-      gap: 40px;
-      padding: 20px;
-    }
-
-    .event-description {
-      flex: 2;
-      text-align: center;
-    }
-
-    .event-details {
-      flex: 1;
-      background-color: #2e2e2e;
-      padding: 20px;
-      border-radius: 8px;
-    }
-
-    .event-images {
-      margin-bottom: 20px;
-    }
-
-    .event-images img {
-      max-width: 100%;
-      max-height: 300px;
-      border-radius: 8px;
-      object-fit: cover;
-    }
-
-    .event-description h2 {
-      margin: 0.5em 0;
-      font-size: 2em;
-    }
-
-    .event-description p {
-      font-size: 1.1em;
-      max-width: 90%;
-      margin: 0 auto;
-    }
-
-    .signup-form {
-      margin-top: 20px;
-    }
-
-    .signup-form button {
-      width: 100%;
-      padding: 10px;
-      font-size: 1rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Create Event</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
-
 <body>
   <div class="page-container">
-    <!-- Header -->
     <div class="header">
       <div class="header-left">
         <h1>Event Manager</h1>
       </div>
       <div class="header-right">
         <a href="/" class="login-btn">Home</a>
-        {% if username %}
-          <a href="/profile/home" class="login-btn">Profile</a>
-        {% else %}
-          <a href="/login" class="login-btn">Login</a>
-        {% endif %}
       </div>
     </div>
 
-    <!-- Event Content -->
-    <div class="event-wrapper">
-      <!-- Left: Image, Title, Description -->
-      <div class="event-description">
-        {% if event.image_urls %}
-          <div class="event-images">
-            <img src="{{ event.image_urls.split(',')[0].strip() }}" alt="Event Image">
-          </div>
-        {% endif %}
+    <div class="content">
+      <h1>Create New Event</h1>
+            <!-- Right: Details & Signup -->
+            <div class="event-details">
+                <p><strong>Type:</strong> {{ event.event_type }}</p>
+                <p><strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}</p>
+                <p><strong>Time:</strong> {{ event.start_time.strftime('%I:%M %p') }}</p>
+                <p><strong>Location:</strong> {{ event.location }}</p>
+                <p><strong>Organizer:</strong> {{ event.organizer }}</p>
+                <p><strong>Tags:</strong> {{ event.tags }}</p>
+                <p><strong>Attendees:</strong> {{ attendee_count }}</p>
+        
+                {% if username %}
+                  <div class="signup-form">
+                    {% if is_signed_up %}
+                      <form action="/event/{{ event.uid }}/cancel" method="post">
+                        <button type="submit">Cancel Signup</button>
+                      </form>
+                    {% else %}
+                      <form action="/event/{{ event.uid }}/signup" method="post">
+                        <button type="submit">Sign Up</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <p><a href="/login">Log in</a> to sign up for this event.</p>
+                {% endif %}
+              </div>
 
-        <h2>{{ event.title }}</h2>
-        <p>{{ event.description }}</p>
-      </div>
-
-      <!-- Right: Details & Signup -->
-      <div class="event-details">
-        <p><strong>Type:</strong> {{ event.event_type }}</p>
-        <p><strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}</p>
-        <p><strong>Time:</strong> {{ event.start_time.strftime('%I:%M %p') }}</p>
-        <p><strong>Location:</strong> {{ event.location }}</p>
-        <p><strong>Organizer:</strong> {{ event.organizer }}</p>
-        <p><strong>Tags:</strong> {{ event.tags }}</p>
-        <p><strong>Attendees:</strong> {{ attendee_count }}</p>
-
-        {% if username %}
-          <div class="signup-form">
-            {% if is_signed_up %}
-              <form action="/event/{{ event.uid }}/cancel" method="post">
-                <button type="submit">Cancel Signup</button>
-              </form>
-            {% else %}
-              <form action="/event/{{ event.uid }}/signup" method="post">
-                <button type="submit">Sign Up</button>
-              </form>
-            {% endif %}
-          </div>
-        {% else %}
-          <p><a href="/login">Log in</a> to sign up for this event.</p>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-      <div class="botnav">
-        <a href="/">Home</a>
-        <a href="#About">About</a>
-        <a href="#pPolicy">Privacy Policy</a>
-        <a href="#Contact">Contact Us</a>
-        <a>© copyright Does not Exist</a>
-      </div>
     </div>
   </div>
 </body>
