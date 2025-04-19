@@ -4,6 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/static/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
   <title>Event Management Website</title>
 </head>
 
@@ -27,13 +28,19 @@
     <!-- Content -->
     <div class="content">
       <div class="left">
-        <h2 style="text-align:center;">Upcoming Events</h2>
-        <div class="menu">
-          <a href="#" class="menuitem">Event 1</a>
-          <a href="#" class="menuitem">Event 2</a>
-          <a href="#" class="menuitem">Event 3</a>
+        <h2 style="text-align:center;">This Week</h2>
+        <div class="menu scrollable-event-list">
+{% for event in events_today %}
+  <a href="#" class="menuitem" onclick="showEventDetails({{ event.uid }})">
+    {{ event.title or event.name or "Untitled Event" }}
+  </a>
+{% endfor %}
+          {% if not events_today %}
+            <p style="padding: 10px; font-style: italic; color: var(--text-300);">No events today!</p>
+          {% endif %}
         </div>
       </div>
+      
 
       <div class="main">
         <div class="search-section">
@@ -53,17 +60,10 @@
       </div>
 
       <div class="right">
-        <h2>Calendar</h2>
-        {% if events_today %}
-          <ul>
-            {% for event in events_today %}
-              <li><strong>{{ event.name }}</strong> @ {{ event.time.strftime('%I:%M %p') }}</li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p>No events today!</p>
-        {% endif %}
+        <h2 style="margin-bottom: 10px;">Calendar</h2>
+        <div id="mini-calendar"></div>
       </div>
+      
       
     </div>
 
@@ -88,5 +88,98 @@
       };
     </script>
   </div>
+
+  <div id="eventModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button" onclick="closeModal()">&times;</span>
+      <div id="modalBody">
+        <!-- Event details loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showEventDetails(eventId) {
+      fetch(`/api/event/${eventId}`)
+        .then(res => {
+          if (!res.ok) throw new Error("Event not found");
+          return res.json();
+        })
+        .then(data => {
+          const modalBody = document.getElementById("modalBody");
+          modalBody.innerHTML = `
+            <h2>${data.title}</h2>
+            <p><strong>Date:</strong> ${data.date}</p>
+            <p><strong>Time:</strong> ${data.start_time} – ${data.end_time}</p>
+            <p><strong>Location:</strong> ${data.location}</p>
+          `;
+          document.getElementById("eventModal").style.display = "block";
+        })
+        .catch(err => {
+          alert("Could not load event.");
+          console.error(err);
+        });
+    }
+  
+    function closeModal() {
+      document.getElementById("eventModal").style.display = "none";
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('mini-calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev',
+          center: 'title',
+          right: 'next'
+        },
+        height: 'auto',
+        contentHeight: 300,
+        events: '/api/user-events', 
+        dayMaxEventRows: true,       
+        eventDisplay: 'block',       
+        eventClick: function(info) {
+          const event = info.event;
+          alert(
+            `Title: ${event.title}\nStart: ${event.start}\nEnd: ${event.end || "N/A"}\nLocation: ${event.extendedProps.location || "N/A"}`
+          );
+          info.jsEvent.preventDefault();
+        }
+      });
+      calendar.render();
+    });
+  </script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('mini-calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev',
+          center: 'title',
+          right: 'next'
+        },
+        height: 'auto',
+        contentHeight: 300,
+        events: '/api/user-events',
+        dayMaxEventRows: true,
+        eventDisplay: 'block',
+  
+        dayHeaderFormat: { weekday: 'narrow' },
+  
+        eventClick: function(info) {
+          const event = info.event;
+          alert(
+            `Title: ${event.title}\nStart: ${event.start}\nEnd: ${event.end || "N/A"}\nLocation: ${event.extendedProps.location || "N/A"}`
+          );
+          info.jsEvent.preventDefault();
+        }
+      });
+      calendar.render();
+    });
+  </script>
 </body>
 </html>

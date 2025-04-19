@@ -126,22 +126,43 @@ def main(
     db_event: Session = Depends(get_event_session), 
     current_user: Optional[UserBase] = Depends(get_current_user)
 ):
+    from datetime import timedelta
+
     today = date.today()
-    events_today = []
+    start_of_week = today - timedelta(days=today.weekday())  # Monday
+    end_of_week = start_of_week + timedelta(days=6)          # Sunday
+    events_this_week = []
 
     if current_user:
-        events_today = db_event.query(EventBase).filter(
+        events_this_week = db_event.query(EventBase).filter(
             EventBase.owner_uid == current_user.uid,
-            EventBase.date == today
+            EventBase.date.between(start_of_week, end_of_week)
         ).all()
 
     return templates.TemplateResponse('home.html', {
         'request': request,
         'username': current_user.username if current_user else None,
-        'events_today': events_today
+        'events_today': events_this_week
     })
+    
+    
+@app.get("/api/event/{event_id}")
+def get_event_summary(
+    event_id: int,
+    db: Session = Depends(get_event_session),
+    current_user: UserBase = Depends(get_current_user)
+):
+    event = db.query(EventBase).filter(EventBase.uid == event_id).first()
+    if event is None:
+        raise HTTPException(status_code=404, detail="Event not found")
 
-
+    return {
+        "title": event.title,
+        "date": event.date.strftime("%B %d, %Y"),
+        "start_time": event.start_time.strftime("%I:%M %p"),
+        "end_time": event.end_time.strftime("%I:%M %p"),
+        "location": event.location,
+    }
 
 # -----------------------------
 # LOGIN AND REGISTRATION
@@ -408,6 +429,7 @@ def get_user_calendar_events(
     events = db.query(EventBase).filter(EventBase.attendees.contains(user_in_event_db)).all()
 
     return JSONResponse(content=events, media_type="application/json")
+
 @app.get("/api/user-events")
 def get_user_events(
     db: Session = Depends(get_event_session),
