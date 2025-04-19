@@ -42,7 +42,10 @@
         <div class="main">
           <div class="search-section">
             <h2 style="text-align:center;">Account</h2>
-        
+            {% if no_org %}
+              <div class="alert", style="color:red">{{ no_org }}</div>
+            {% endif %}
+
             <div class="search-box">    
               <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
                 <img src="{{ profile_image_url }}"

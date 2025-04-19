@@ -247,18 +247,26 @@ def prof_main(request: Request, current_user: Optional[UserBase] = Depends(get_c
 
     if current_user is None:
         response = RedirectResponse(url="/login", status_code=303)
-        response.set_cookie("message", "Please log in to access this page", max_age = 5)
+        response.set_cookie("message", "Please log in to access this page", max_age = 10)
         return response
-    
-    return templates.TemplateResponse("profile_home.html", {
+        
+    cookie_msg = request.cookies.get("not_organizer_alert")
+
+    response = templates.TemplateResponse("profile_home.html", {
         "request": request,
         "username": current_user.username,
         "profile_image_url": current_user.profile_image_url,
         "first_name": current_user.first_name,
         "last_name": current_user.last_name,
         "about": current_user.about,
-        "is_organizer": current_user.is_organizer
+        "is_organizer": current_user.is_organizer,
+        "no_org": cookie_msg
     })
+
+    if cookie_msg:
+        response.delete_cookie("not_organizer_alert")
+
+    return response
 
 @app.get("/profile/security")
 def prof_password(request: Request, current_user: Optional[UserBase] = Depends(get_current_user)):
@@ -493,8 +501,15 @@ def get_create_event(request: Request, current_user: Optional[UserBase] = Depend
 
     # optionally check if user is an organizer
     if not current_user.is_organizer:
-        raise HTTPException(status_code=403, detail="Only organizers can create events")
-
+        response = RedirectResponse(url="/profile/home", status_code=302)
+        response.set_cookie(
+            key="not_organizer_alert",
+            value="You need to be an organizer to access this page.",
+            max_age=10,
+            httponly=True
+        )
+        return response
+    
     return templates.TemplateResponse("create_event.html", {"request": request, "username": current_user.username, "is_organizer": current_user.is_organizer})
 
 @app.post("/organizer/create_event")
