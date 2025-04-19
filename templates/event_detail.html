@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Event</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="page-container">
+    <div class="header">
+      <div class="header-left">
+        <h1>Event Manager</h1>
+      </div>
+      <div class="header-right">
+        <a href="/" class="login-btn">Home</a>
+      </div>
+    </div>
+
+    <div class="content">
+      <h1>Create New Event</h1>
+            <!-- Right: Details & Signup -->
+            <div class="event-details">
+                <p><strong>Type:</strong> {{ event.event_type }}</p>
+                <p><strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}</p>
+                <p><strong>Time:</strong> {{ event.start_time.strftime('%I:%M %p') }}</p>
+                <p><strong>Location:</strong> {{ event.location }}</p>
+                <p><strong>Organizer:</strong> {{ event.organizer }}</p>
+                <p><strong>Tags:</strong> {{ event.tags }}</p>
+                <p><strong>Attendees:</strong> {{ attendee_count }}</p>
+        
+                {% if username %}
+                  <div class="signup-form">
+                    {% if is_signed_up %}
+                      <form action="/event/{{ event.uid }}/cancel" method="post">
+                        <button type="submit">Cancel Signup</button>
+                      </form>
+                    {% else %}
+                      <form action="/event/{{ event.uid }}/signup" method="post">
+                        <button type="submit">Sign Up</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <p><a href="/login">Log in</a> to sign up for this event.</p>
+                {% endif %}
+              </div>
+
+    </div>
+  </div>
+</body>
+</html>

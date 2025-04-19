@@ -24,26 +24,47 @@
     <div class="left">
       <h2 style="text-align:center;">Account Settings</h2>
       <div class="menu">
-        <a href="../profile/home" class="menuitem">Home</a>
-        <a href="../profile/edit" class="menuitem">Edit Profile</a>
-        <a href="../profile/security" class="menuitem">Security</a>
-        <a href="../profile/events" class="menuitem">Events Joined</a>
+        <a href="/profile/home" class="menuitem">Home</a>
+        <a href="/profile/edit" class="menuitem">Edit Profile</a>
+        <a href="/profile/security" class="menuitem">Security</a>
+        <a href="/profile/calendar" class="menuitem">Calendar</a>
+        <a href="/profile/events" class="menuitem">Events Joined</a>
+        {% if is_organizer %}
+        <a href="/organizer/create_event" class="menuitem">Create Event</a>
+        {% endif %}        
+        <div><br></div>
         <a href="#" class="menuitem" onclick="logout()">Logout</a>
+
+
       </div>
     </div>
 
-      <!-- Main Section -->
-      <div class="main">
-        <div class="search-section">
-          <h2 style="text-align:center;">Account</h2> <!--Username can go here-->
+        <div class="main">
+          <div class="search-section">
+            <h2 style="text-align:center;">Account</h2>
+            {% if no_org %}
+              <div class="alert", style="color:red">{{ no_org }}</div>
+            {% endif %}
 
-          <div class="search-box">
-            <h3> Profile information displayed here</h3>
-
+            <div class="search-box">    
+              <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                <img src="{{ profile_image_url }}"
+                    alt="Profile Picture"
+                    style="width:100px; height:100px; border-radius:50%; object-fit:cover; margin-bottom: 10px;">
+        
+                <h4 style="margin: 5px 0;">{{ first_name }} {{ last_name }}</h4>
+        
+                <p style="max-width: 400px; font-size: 14px; color: var(--text-300);">
+                  {{ about }}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
+    
       </div>
     </div>
+  </div>
 
     <!-- Footer -->
     <div class="footer">

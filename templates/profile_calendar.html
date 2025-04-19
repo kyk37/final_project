@@ -1,21 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html data-theme="dark">
 <head>
-  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Manager - Profile</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  <!-- FullCalendar CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
 </head>
-<body>
-  <div id='calendar'></div>
 
+<body>
+  <div class="page-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <h1>Event Manager</h1>
+      </div>
+      <div class="header-right">
+        <a href="/" class="login-btn">Home</a>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Left Sidebar -->
+      <div class="left">
+        <h2 style="text-align:center;">Account Settings</h2>
+        <div class="menu">
+          <a href="/profile/home" class="menuitem">Home</a>
+          <a href="/profile/edit" class="menuitem">Edit Profile</a>
+          <a href="/profile/security" class="menuitem">Security</a>
+          <a href="/profile/calendar" class="menuitem">Calendar</a>
+          <a href="/profile/events" class="menuitem">Events Joined</a>
+          {% if is_organizer %}
+          <a href="/organizer/create_event" class="menuitem">Create Event</a>
+          {% endif %}
+          <div><br></div>
+          <a href="#" class="menuitem" onclick="logout()">Logout</a>
+
+        </div>
+      </div>
+
+      <!-- Main Section -->
+      <div class="main">
+        <div class="calendar-section">
+          <h3 style="text-align:center; margin-bottom: 10px;">Your Event Calendar</h3>
+          <div id="calendar" style="width: 100%; min-height: 600px;"></div>
+        </div>
+        
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="botnav">
+        <a class="active" href="#home">Home</a>
+        <a href="#About">About</a>
+        <a href="#pPolicy">Privacy Policy</a>
+        <a href="#Contact">Contact Us</a>
+        <a>© copyright Does not Exist</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- FullCalendar JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+  <!-- Init Calendar -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const calendarEl = document.getElementById('calendar');
       const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        events: '/api/events',
+        events: '/api/user-events',
+        height: 'auto',  // prevent fixed height overflow
+        eventClick: function(info) {
+          const event = info.event;
+          alert(
+            `Title: ${event.title}\nStart: ${event.start}\nEnd: ${event.end || "N/A"}\nLocation: ${event.extendedProps.location || "N/A"}`
+          );
+          info.jsEvent.preventDefault();
+        }
       });
       calendar.render();
     });
+    function logout() {
+      fetch("/logout", { method: "POST" })
+        .then(() => { window.location.href = "/login"; })
+        .catch(err => {
+          alert("Logout failed.");
+          console.error(err);
+        });
+    }
   </script>
 </body>
 </html>
