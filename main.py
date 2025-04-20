@@ -28,7 +28,7 @@ from src.event_model import Events as EventBase
 from src.hasher import Hasher
 from src.auth import create_access_token, decode_access_token
 from src.config import SECRET_KEY, ALGORITHM
-from src.startup import create_admin_user, create_events
+from src.startup import create_startup_users, create_events
 
 from calendar_router import calendar_router
 
@@ -38,47 +38,37 @@ from db.base import Base
 
 # Database setup
 USER_DATABASE_URL = "sqlite:///./user_database.db"
-EVENT_DATABASE_URL = "sqlite:///./event_database.db"
+
 
 # File paths for the SQLite databases
 USER_DB_FILE = "./user_database.db"
-EVENT_DB_FILE = "./event_database.db"
 
 engine_usr = create_engine(USER_DATABASE_URL, connect_args={"check_same_thread": False})
-engine_event = create_engine(EVENT_DATABASE_URL, connect_args={"check_same_thread": False})
 
 SessionLocal_usr = sessionmaker(autocommit=False, autoflush=False, bind=engine_usr)
-SessionLocal_event = sessionmaker(autocommit=False, autoflush=False, bind=engine_event)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Delete existing database files if they exist
     if os.path.exists(USER_DB_FILE):
         os.remove(USER_DB_FILE)
-    if os.path.exists(EVENT_DB_FILE):
-        os.remove(EVENT_DB_FILE)
 
     # Create tables
     Base.metadata.create_all(bind=engine_usr)
-    Base.metadata.create_all(bind=engine_event)
+
 
     # Initialize database sessions
-    db_usr = SessionLocal_usr()
-    db_event = SessionLocal_event()
+    db = SessionLocal_usr()
     try:
-        admin_user = create_admin_user(db_usr)
-        create_events(db_event, db_usr, admin_user.uid)
-        db_usr.commit()
-        db_event.commit()
+        organizer_map = create_startup_users(db)
+        create_events(db, organizer_map)
+        db.commit()
     except Exception as e:
-        db_usr.rollback()
-        db_event.rollback()
+        db.rollback()
         print(f"Error during database initialization: {e}")
         raise
     finally:
-        db_usr.close()
-        db_event.close()
-
+        db.close()
     yield
 
 
@@ -148,8 +138,9 @@ def main(
             EventBase.date.between(start_of_week, end_of_week)
         ).all()
         joined_event_ids = {e.uid for e in user_in_event_db.events}
-        
-    query = db_event.query(EventBase)
+    
+    # Search all Events that are NOT archived
+    query = db_event.query(EventBase).filter(EventBase.archived == False)
     all_events = query.offset((page - 1) * per_page).limit(per_page).all()
 
     total_events = query.count()

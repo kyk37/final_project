@@ -6,7 +6,8 @@ from datetime import datetime, timedelta, date
 from src.usr_model import User
 import random
 
-def create_admin_user(db: Session):
+def create_startup_users(db: Session):
+    organizer_map = {}
     # Define user credentials
     admin_username = "admin"
     admin_email = "admin@admin.com"
@@ -30,6 +31,7 @@ def create_admin_user(db: Session):
             last_name="admin_last_name",
             created_at=datetime.now(),
             is_organizer=True,
+            admin= True,
             profile_image_url="/static/defaults/default_avatar.jpg"
         )
         db.add(admin_user)
@@ -51,121 +53,119 @@ def create_admin_user(db: Session):
             last_name="User",
             created_at=datetime.now(),
             is_organizer=False,
-            profile_image_url="/static/defaults/default_avatar.jpg"
+            profile_image_url="/static/defaults/default_avatar.jpg",
+            admin=True
         )
         db.add(test_user)
         db.commit()
         db.refresh(test_user)
         print(f"Created test user with ID: {test_user.uid}")
 
-    return admin_user
+
+    # Organizer accounts
+    organizers = ["CS Department", "Student Council", "Wellness Club", "Career Center", "AI Lab"]
+
+    for org_name in organizers:
+        username = org_name.lower().replace(" ", "_")
+        email = f"{username}@events.com"
+        password = "organizer"
+
+        existing = db.query(User).filter(User.username == username).first()
+        if existing:
+            print(f"Organizer '{username}' already exists. Using existing account.")
+            organizer_map[org_name] = existing
+            continue
+
+        salt = bcrypt.gensalt(rounds=12)
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), salt)
+
+        organizer = User(
+            username=username,
+            email=email,
+            password_hashed=hashed_password,
+            first_name=org_name.split()[0],
+            last_name=org_name.split()[-1] if len(org_name.split()) > 1 else "Team",
+            created_at=datetime.now(),
+            is_organizer=True,
+            admin=False,
+            profile_image_url="/static/defaults/default_avatar.jpg"
+        )
+        db.add(organizer)
+        db.commit()
+        db.refresh(organizer) 
+        organizer_map[org_name] = organizer.uid
+        print(f" Created organizer '{username}' with ID: {organizer.uid}")
+
+
+    return organizer_map
 
 def random_datetime(start_range, end_range):
     total_seconds = int((end_range - start_range).total_seconds())
     random_offset = timedelta(seconds=random.randint(0, total_seconds))
     return start_range + random_offset
 
-def create_events(event_db: Session, user_db: Session, organizer_uid: int):
-    from datetime import datetime, timedelta
 
-    organizer_in_user_db = user_db.query(User).filter_by(uid=organizer_uid).first()
-    if not organizer_in_user_db:
-        print("Organizer not found in user DB!")
-        return
-
-    # Merge organizer into event DB session
-    organizer = event_db.merge(organizer_in_user_db)
-
-
+def create_events(event_db: Session, organizer_map: dict[str, int]):
     titles = [
-    "Intro to Python", "Data Science Workshop", "AI Ethics Panel", "React Crash Course",
-    "Cybersecurity 101", "Hackathon Planning", "Career Fair Prep", "Yoga Session",
-    "Mindfulness Hour", "Resume Review", "Cloud Computing", "Group Project Meeting",
-    "Blockchain Basics", "ML Model Tuning", "Internship Panel", "Final Exam Review",
-    "Startup Pitch Night", "Robotics Demo", "VR Gaming Showcase", "Women in Tech",
-    "Public Speaking", "Student Townhall", "SAT Prep", "Dance Workshop",
-    "Meditation Break", "Campus Tour", "Finance 101", "Art Showcase", "Chess Tournament",
-    "Language Exchange", "Alumni Mixer", "Creative Coding", "Film Screening",
-    "Sustainability Forum", "Podcast Club", "E-sports Event", "Study Jam",
-    "Toastmasters", "Mental Health Talk", "Community Cleanup"
+        "Intro to Python", "Data Science Workshop", "AI Ethics Panel", "React Crash Course",
+        "Cybersecurity 101", "Hackathon Planning", "Career Fair Prep", "Yoga Session",
+        "Mindfulness Hour", "Resume Review", "Cloud Computing", "Group Project Meeting",
+        "Blockchain Basics", "ML Model Tuning", "Internship Panel", "Final Exam Review",
+        "Startup Pitch Night", "Robotics Demo", "VR Gaming Showcase", "Women in Tech",
+        "Public Speaking", "Student Townhall", "SAT Prep", "Dance Workshop",
+        "Meditation Break", "Campus Tour", "Finance 101", "Art Showcase", "Chess Tournament",
+        "Language Exchange", "Alumni Mixer", "Creative Coding", "Film Screening",
+        "Sustainability Forum", "Podcast Club", "E-sports Event", "Study Jam",
+        "Toastmasters", "Mental Health Talk", "Community Cleanup"
     ]
+
     locations = ["Room 101", "Library B12", "Hall A", "Zoom", "Auditorium", "Wellness Center", "Café Lounge"]
-    organizers = ["CS Department", "Student Council", "Wellness Club", "Career Center", "AI Lab"]
+    organizers = list(organizer_map.keys())
     types = ["Class", "Meeting", "Workshop", "Gym Class", "Event"]
     tags = ["tech, beginner", "health, wellness", "career, resume", "project, collaboration", "fun, social"]
     images = ["/static/img/python_poster.png", "/static/img/project_meeting.png", "/static/img/yoga_class.jpg"]
 
     now = datetime.now()
-    start_time = now - timedelta(days=30)
+    start_range = now - timedelta(days=30)
     end_range = now + timedelta(days=90)
 
-    sample_events = []
+    def random_datetime(start, end):
+        delta = end - start
+        return start + timedelta(seconds=random.randint(0, int(delta.total_seconds())))
 
     for i in range(100):
-        start_time = random_datetime(start_time,end_range)
-        duration_hours = random.randint(1, 3)
-        end_time = start_time + timedelta(hours=duration_hours)
+        start_time = random_datetime(start_range, end_range)
+        end_time = start_time + timedelta(hours=random.randint(1, 3))
         title = titles[i % len(titles)]
 
-        sample_events.append(Events(
-            owner_uid=organizer.uid,
+        organizer_name = random.choice(organizers)
+        organizer_uid = organizer_map.get(organizer_name)
+
+        if not organizer_uid:
+            print(f"Skipping event: Organizer '{organizer_name}' has no UID.")
+            continue
+
+        organizer_user = event_db.get(User, organizer_uid)
+        if not organizer_user:
+            print(f"Skipping event: Organizer UID {organizer_uid} not found in DB.")
+            continue
+
+        event = Events(
+            owner_uid=organizer_user.uid,
             title=title,
             date=start_time.date(),
             start_time=start_time,
             end_time=end_time,
             location=random.choice(locations),
             event_type=random.choice(types),
-            organizer=random.choice(organizers),
+            organizer=organizer_name,
             tags=random.choice(tags),
             image_urls=random.choice(images),
-            description=f"This is a session on {title.lower()}."
-        ))
+            description=f"This is a session on {title.lower()}",
+            archived=start_time.date() < now.date()
+        )
 
-    # old events
-    # sample_events = [
-    #     Events(
-    #         owner_uid=organizer.uid,
-    #         title="Intro to Python",
-    #         date=now.date(),
-    #         start_time=now,
-    #         end_time=now + timedelta(hours=1),
-    #         location="Room 101",
-    #         event_type="Class",
-    #         organizer="CS Department",
-    #         tags="tech, beginner, python",
-    #         image_urls="/static/img/python_poster.png",
-    #         description="CS class for beginners"
-    #     ),
-    #     Events(
-    #         owner_uid=organizer.uid,
-    #         title="Group Project Meeting",
-    #         date=now.date(),
-    #         start_time=now + timedelta(days=1, hours=2),
-    #         end_time=now + timedelta(days=1, hours=4),
-    #         location="Library B12",
-    #         event_type="Meeting",
-    #         organizer="Project Team",
-    #         tags="project, team, collaboration",
-    #         image_urls="/static/img/project_meeting.png",
-    #         description="Team sync for final project"
-    #     ),
-    #     Events(
-    #         owner_uid=organizer.uid,
-    #         title="Yoga Session",
-    #         date=now.date(),
-    #         start_time=now + timedelta(days=2, hours=1),
-    #         end_time=now + timedelta(days=2, hours=2),
-    #         location="Wellness Center",
-    #         event_type="Gym Class",
-    #         organizer="Student Wellness Club",
-    #         tags="health, wellness, yoga",
-    #         image_urls="/static/img/yoga_class.jpg",
-    #         description="Relax and recharge"
-    #     )
-    # ]
-
-    for event in sample_events:
-        event.attendees.append(organizer)  # Add the organizer as an attendee
+        event.attendees.append(organizer_user)
         event_db.add(event)
 
-    event_db.commit()
+        event_db.commit()
