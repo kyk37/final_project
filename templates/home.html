@@ -60,7 +60,7 @@
 
  
             <div class="search-centered">
-              
+
               <div class="scrollable-event-list-home">
                 {% if all_events %}
                   {% for event in all_events %}
@@ -74,9 +74,8 @@
                           <span><b>End Time:</b> {{ event.end_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
                           <span><b>Location:</b> {{ event.location }}</span><br>
                           <span><b>Description:</b> {{ event.description }}</span><br>
-                          <span><b>Tags:</b> {{ event.tags }}</span>
                         </div>
-      
+                        
                         <div class="scroll-join-button">
                           {% if username %}
                           {% set is_joined = event.uid in joined_event_ids %}
@@ -87,12 +86,13 @@
                           >
                             {{ 'Joined!' if is_joined else 'Join' }}
                           </button>
-                        {% else %}
-                          <small style="color: gray;">Login to join</small>
-                        {% endif %}
+                          {% else %}
+                            <small style="color: gray;">Login to join</small>
+                          {% endif %}
                         </div>
       
                       </div>
+                      
                     </div>
                   {% endfor %}
                 {% else %}
@@ -100,8 +100,23 @@
                 {% endif %}
               </div>
             </div>
-          </div>
 
+            <div style="clear: both;"></div>
+            
+            <div class="pagination">
+              {% if page > 1 %}
+                <a href="/?page={{ page - 1 }}">Previous</a>
+              {% endif %}
+              <span>Page {{ page }} of {{ total_pages }}</span>
+              {% if page < total_pages %}
+                <a href="/?page={{ page + 1 }}">Next</a>
+              {% endif %}
+            </div>
+  
+
+
+
+          </div>
 
 
         </div>

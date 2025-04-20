@@ -124,7 +124,9 @@ def get_current_user(request: Request, db: Session = Depends(get_user_session)):
 def main(
     request: Request, 
     db_event: Session = Depends(get_event_session), 
-    current_user: Optional[UserBase] = Depends(get_current_user)
+    current_user: Optional[UserBase] = Depends(get_current_user),
+    page: int = 1,
+    per_page: int = 20
 ):
     '''
         Main Home Page
@@ -146,15 +148,20 @@ def main(
             EventBase.date.between(start_of_week, end_of_week)
         ).all()
         joined_event_ids = {e.uid for e in user_in_event_db.events}
+        
+    query = db_event.query(EventBase)
+    all_events = query.offset((page - 1) * per_page).limit(per_page).all()
 
-    all_events = db_event.query(EventBase).all()
-
+    total_events = query.count()
+    total_pages = (total_events + per_page - 1) // per_page
 
     return templates.TemplateResponse('home.html', {
         'request': request,
         'username': current_user.username if current_user else None,
         'events_today': events_this_week,
         'all_events': all_events,
+        'page': page,
+        'total_pages': total_pages,
         'joined_event_ids': joined_event_ids
     })
 
