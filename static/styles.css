@@ -71,18 +71,18 @@
 .page-container {
   max-width: 1200px;
   background: var(--background);
-  width: 100%; /* take full width of viewport if needed */
+  width: 100%; 
   margin: 0 auto;
   padding: 0 10px;
-  flex: 1; /* grow to fill space */
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .content {
-  margin-top: 5px; /* <-- space between header and content */
+  margin-top: 5px;
   display: flex;
-  flex-direction: row;  /* ✅ Makes them line up horizontally */
+  flex-direction: row;
   flex: 1;
   gap: 10px;
   background: var(--background);
@@ -95,8 +95,8 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-    overflow-x: hidden; /* Hide horizontal scroll if needed */
-    overflow-y: auto;   /* Allow vertical scrolling */
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
 
@@ -156,13 +156,39 @@ html{
   cursor: pointer;
   text-decoration: none;
   border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button.join-btn{
+  align-items: right;
+  padding: 10px 16px;
+  font-size: 16px;
+  background-color:var(--primary);
+  color: var(--text);
+  border: 5px;
+  border-radius: 6px;
+  border-color: var(--background);
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+
+
+button:hover {
+  background-color:var(--primary-600);
+  text-decoration: none;
+  border: 1px solid #ccc;
   border-radius: 4px;
 }
 
+
+
 .page-container {
-  max-width: 1200px; /* or any width that fits your layout */
-  margin: 0 auto;    /* center horizontally */
-  padding: 0 10px;   /* optional side padding */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
 }
 
 .header-right .login-btn:hover {
@@ -173,9 +199,7 @@ html{
 }
 
 
-
 .menu {
-  /* float: left; <-- remove this since it's now in .left */
   width: 100%;
   text-align: center;
 }
@@ -221,6 +245,36 @@ html{
   flex-direction: column;
 }
 
+
+.scrollable-event-list-home {
+  max-height: 450px;
+  overflow-y: scroll;
+  overflow-x: auto; 
+  padding-right: 10px;
+  margin-top: 10px;
+  background-color: var(--background-800);
+  border: 1px solid var(--background-600);
+  border-radius: 6px;
+  box-sizing: border-box; 
+  scroll-behavior: smooth;
+  width: 100%;
+}
+
+/* Optional: Pretty scroll styling */
+.scrollable-event-list-home::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollable-event-list-home::-webkit-scrollbar-thumb {
+  background-color: var(--primary-500);
+  border-radius: 5px;
+}
+
+.scrollable-event-list-home::-webkit-scrollbar-track {
+  background-color: var(--background-700);
+}
+
+
 .right {
   background-color:var(--background-800);
   width: clamp(150px, 20%, 250px);
@@ -248,9 +302,17 @@ html{
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
-
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 12px;
+  font-size: 16px;
+  color: var(--text-100);
+}
 .search {
   width: max-content;
   font-family: 'Courier New', Courier, monospace;
@@ -290,7 +352,7 @@ html{
 .search button {
   padding: 8px 12px;
   font-size: 16px;
-  border: 1px solid var(--text-200); /* or #ccc for light grey */
+  border: 1px solid var(--text-200); 
   background-color: var(--primary);
   color: var(--text);
   border-radius: 10px;
@@ -314,7 +376,7 @@ html{
 .search button:hover {
   background-color: var(--primary-600);
   color: var(--text);
-  border: 1px solid var(--text-200); /* or #ccc for light grey */
+  border: 1px solid var(--text-200);
   box-shadow: 0 2px 6px var(--background-700);
 }
 .search button:hover i {
@@ -371,8 +433,8 @@ html{
 
 /* Login Page */
 .alert {
-  background-color: var(--text-100);  /* very light gray/blue */
-  color: var(--background-900);       /* very dark for contrast */
+  background-color: var(--text-100); 
+  color: var(--background-900);
   border-left: 4px solid var(--primary-500);
   padding: 12px;
   border-radius: 6px;
@@ -397,7 +459,7 @@ html{
 
 /* Also apply color to placeholder text for consistency */
 .login-container input::placeholder {
-  color: var(--text-300); /* slightly dimmer than full text, but readable */
+  color: var(--text-300);
 }
 
 .login-container h2 {
@@ -445,13 +507,12 @@ html{
 
 /* Login Page Modal */
 /* Modal container */
-
 .modal-content input {
   color:var(--text)
 }
 
 .modal-content input::placeholder {
-  color: var(--text-300); /* slightly dimmer than full text, but readable */
+  color: var(--text-300);
 }
 
 .modal {
@@ -566,11 +627,8 @@ html{
   flex: 1;
   padding: 8px;
   border-radius: 4px;
-  border: 1px solid #ccc; /* Or use var(--background-600) if you want theme consistency */
+  border: 1px solid #ccc; 
 }
-
-
-
 
 .cancel-btn {
   display: inline-block;
@@ -590,7 +648,6 @@ html{
 
 
 /* Events Page */
-
 .search-box {
   border: 2px solid #ccc;
   border-radius: 10px;
@@ -599,7 +656,7 @@ html{
   margin-bottom: 15px;
   background-color: var(--background-800);
   display: flex;
-  max-height: 400px;       /* Constrain the height */
+  max-height: 700px;
   overflow: hidden; 
   flex: 1;
   flex-direction: column;
@@ -629,20 +686,31 @@ html{
 }
 
 
+/* Profile event refresh button */
+.refresh-container {
+  display: flex;
+  justify-content: flex-end; 
+  margin-top: 10px;
+}
+
+.refresh-btn {
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
 .scrollable-event-list {
-  max-height: 250px;
+  max-height: 550px;
   overflow-y: scroll;
-  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-x: hidden;
   padding-right: 10px;
   margin-top: 10px;
   background-color: var(--background-800);
   border: 1px solid var(--background-600);
   border-radius: 6px;
-  box-sizing: border-box; /* Include padding in width/height */
-  scroll-behavior: smooth; /* Smooth scrolling */
+  box-sizing: border-box;
+  scroll-behavior: smooth;
 }
 
-/* Optional: Pretty scroll styling */
 .scrollable-event-list::-webkit-scrollbar {
   width: 10px;
 }
@@ -656,6 +724,16 @@ html{
   background-color: var(--background-700);
 }
 
+.pagination a {
+  padding: 8px 12px;
+  text-decoration: none;
+  color: var(--text);
+  background-color: var(--primary);
+  border-radius: 5px;
+  border: 1px solid var(--background-600);
+  transition: background-color 0.2s ease;
+}
+
 /* Each event block */
 .event-card {
   padding: 10px;
@@ -666,6 +744,42 @@ html{
   box-shadow: 0 2px 4px var(--background-900);
   color: var(--text);
 }
+
+.event-card-home {
+  padding: 10px;
+  margin-bottom: 8px;
+  background-color: var(--background-700);
+  border: 1px solid var(--background-600);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px var(--background-900);
+  color: var(--text);
+}
+
+
+.scroll-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.event-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.event-details {
+  flex-grow: 1;
+}
+
+.scroll-join-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-left: 10px;
+}
+
 
 
 /* Calendar */
@@ -682,9 +796,9 @@ html{
 }
 
 .fc .fc-col-header-cell {
-  background-color: var(--background-700); /* Match your dark background */
-  color: var(--text-100); /* Light text for readability */
-  border: 1px solid var(--background-600); /* Optional border for separation */
+  background-color: var(--background-700); 
+  color: var(--text-100); 
+  border: 1px solid var(--background-600); 
 }
 
 /* Adjust header padding and text alignment if needed */
@@ -693,19 +807,19 @@ html{
   text-align: center;
   display: block;
   font-weight: bold;
-  color: var(--text-100); /* Lighten the header text */
-  background-color: transparent; /* ensure no conflicting white background */
+  color: var(--text-100);
+  background-color: transparent;
 }
 
 /* Lighten day numbers in calendar cells */
 .fc .fc-daygrid-day-number {
-  color: var(--text-100); /* Lighter text for visibility */
+  color: var(--text-100); 
   font-weight: bold;
 }
 
 /* Optional: Lighten the cell background slightly */
 .fc .fc-daygrid-day {
-  background-color: var(--background-800); /* Or --background-600 for more contrast */
+  background-color: var(--background-800);
   border: 1px solid var(--background-600);
 }
 

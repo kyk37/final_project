@@ -25,7 +25,8 @@ class Events(Base):
     tags: Mapped[str] = mapped_column(String, nullable=True, default="")
     image_urls: Mapped[str] = mapped_column(String, nullable=True, default="")
     description: Mapped[str] = mapped_column(String, nullable=True)
-
+    archived: Mapped[bool] = mapped_column(default=False)
+    
     attendees: Mapped[list["User"]] = relationship(
         "User",
         secondary="event_signups",
