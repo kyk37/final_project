@@ -44,31 +44,53 @@
         <div class="search-section">
           <h2 style="text-align:center;">Events Your Attending</h2>
           <div class="search-box">
-            <div class="scrollable-event-list">
+            
+            <div class="scrollable-event-list-home">
               {% if user_events %}
                 {% for event in user_events %}
-                <div class="event-card">
-                  <strong style="font-size: 1.2em;">{{ event.title }}</strong><br>
-                  <span> <b>Organizer: </b> {{event.organizer}}<br>
-                  <span><b>Event Created: </b> {{ event.date.strftime('%Y-%m-%d') }} <br>
-                  <span><b>Start Time: </b> {{ event.start_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
-                   <span><b>End Time: </b> {{ event.end_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
-
-                  <span> <b>Location: </b> {{ event.location }}</span> <br>
-                  <span><b>Description: </b> {{event.description}} <br>
-                  <span><b>Tags: </b> {{event.tags}}
-                </div>
+                  <div class="event-card">
+                    <div class="event-inner"> <!-- This is the flex wrapper -->
+    
+                      <div class="event-details">
+                        <span><b>Organizer:</b> {{ event.organizer }}</span><br>
+                        <span><b>Event Created:</b> {{ event.date.strftime('%Y-%m-%d') }}</span><br>
+                        <span><b>Start Time:</b> {{ event.start_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
+                        <span><b>End Time:</b> {{ event.end_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
+                        <span><b>Location:</b> {{ event.location }}</span><br>
+                        <span><b>Description:</b> {{ event.description }}</span><br>
+                        <span><b>Tags:</b> {{ event.tags }}</span>
+                      </div>
+    
+                      <div class="scroll-join-button">
+                        {% if username %}
+                        {% set is_joined = event.uid in joined_event_ids %}
+                        <button
+                          class="join-btn"
+                          onclick="toggleJoin({{ event.uid }}, this)"
+                          data-joined="{{ 'true' if is_joined else 'false' }}"
+                        >
+                          {{ 'Joined!' if is_joined else 'Join' }}
+                        </button>
+                      {% else %}
+                        <small style="color: gray;">Login to join</small>
+                      {% endif %}
+                      </div>
+    
+                    </div>
+                  </div>
                 {% endfor %}
               {% else %}
-                <p style="color: var(--text-300); font-style: italic;">No events joined yet.</p>
+                <p style="color: var(--text-300); font-style: italic;">No events available.</p>
               {% endif %}
             </div>
           </div>
 
-
+          <div class="refresh-container">
+            <button class="join-btn refresh-btn" onclick="refresh()">Refresh List</button>
+          </div>
+          
         </div>
       </div>
-
 
     </div>
 
@@ -86,22 +108,59 @@
 
   
     <script>
+      // Theme
       const toggleTheme = () => {
         const body = document.body;
         const isDark = body.getAttribute('data-theme') === 'dark';
         body.setAttribute('data-theme', isDark ? 'light' : 'dark');
       };
 
-        function logout() {
-          fetch("/logout", {
-            method: "POST"
-          }).then(() => {
-            window.location.href = "/login";
-          }).catch(err => {
-            alert("Logout failed.");
-            console.error(err);
-          });
+      // Update button
+      function refresh() {
+        location.reload();
+      }
+
+    // if user clicked join event
+    function toggleJoin(eventId, button) {
+      const isJoined = button.getAttribute("data-joined") === "true";
+      const endpoint = isJoined ? `/api/unjoin_event/${eventId}` : `/api/join_event/${eventId}`;
+    
+      fetch(endpoint, {
+        method: "POST",
+      })
+      .then(response => {
+        if (response.ok) {
+          if (isJoined) {
+            button.innerText = "Join";
+            button.setAttribute("data-joined", "false");
+            button.classList.remove("joined");
+          } else {
+            button.innerText = "Joined!";
+            button.setAttribute("data-joined", "true");
+            button.classList.add("joined");
+          }
+        } else {
+          return response.json().then(data => alert("Error: " + data.detail));
         }
+      })
+      .catch(error => {
+        console.error("Request failed:", error);
+        alert("Something went wrong.");
+      });
+    }
+
+
+      // logout button
+      function logout() {
+        fetch("/logout", {
+          method: "POST"
+        }).then(() => {
+          window.location.href = "/login";
+        }).catch(err => {
+          alert("Logout failed.");
+          console.error(err);
+        });
+      }
             
     </script>
 </div>

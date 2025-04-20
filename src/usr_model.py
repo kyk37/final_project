@@ -27,7 +27,7 @@ class User(Base):
 
     events: Mapped[list["Events"]] = relationship(
         "Events",
-        secondary="event_signups",
+        secondary=event_signups,
         back_populates="attendees"
     )
 

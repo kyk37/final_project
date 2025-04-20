@@ -126,26 +126,39 @@ def main(
     db_event: Session = Depends(get_event_session), 
     current_user: Optional[UserBase] = Depends(get_current_user)
 ):
+    '''
+        Main Home Page
+    '''
     from datetime import timedelta
 
+
     today = date.today()
-    start_of_week = today - timedelta(days=today.weekday())  # Monday
-    end_of_week = start_of_week + timedelta(days=6)          # Sunday
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+
     events_this_week = []
+    joined_event_ids = set()
 
     if current_user:
+        user_in_event_db = db_event.merge(current_user)
         events_this_week = db_event.query(EventBase).filter(
             EventBase.owner_uid == current_user.uid,
             EventBase.date.between(start_of_week, end_of_week)
         ).all()
+        joined_event_ids = {e.uid for e in user_in_event_db.events}
+
+    all_events = db_event.query(EventBase).all()
+
 
     return templates.TemplateResponse('home.html', {
         'request': request,
         'username': current_user.username if current_user else None,
-        'events_today': events_this_week
+        'events_today': events_this_week,
+        'all_events': all_events,
+        'joined_event_ids': joined_event_ids
     })
-    
-    
+
+
 @app.get("/api/event/{event_id}")
 def get_event_summary(
     event_id: int,
@@ -163,6 +176,60 @@ def get_event_summary(
         "end_time": event.end_time.strftime("%I:%M %p"),
         "location": event.location,
     }
+
+
+@app.post("/api/join_event/{event_id}")
+def join_event(
+    event_id: int,
+    db: Session = Depends(get_event_session),
+    current_user: UserBase = Depends(get_current_user)
+):
+    '''
+        Join an event from main page
+    '''
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="User must be logged in to join events")
+
+    event = db.query(EventBase).filter(EventBase.uid == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    user_in_event_db = db.merge(current_user)  # Attach user to current DB session
+
+    if user_in_event_db not in event.attendees:
+        event.attendees.append(user_in_event_db)
+        db.commit()
+        
+    else:
+        raise HTTPException(status_code=400, detail="Already joined this event")
+
+    return {"message": "Successfully joined event"}
+
+
+
+@app.post("/api/unjoin_event/{event_id}")
+def unjoin_event(
+    event_id: int,
+    db: Session = Depends(get_event_session),
+    current_user: UserBase = Depends(get_current_user)
+):
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="User must be logged in")
+
+    event = db.query(EventBase).filter(EventBase.uid == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    user_in_event_db = db.merge(current_user)
+
+    if user_in_event_db in event.attendees:
+        event.attendees.remove(user_in_event_db)
+        db.commit()
+    else:
+        raise HTTPException(status_code=400, detail="Not joined to begin with")
+
+    return {"message": "Successfully unjoined event"}
+
 
 # -----------------------------
 # LOGIN AND REGISTRATION
@@ -291,13 +358,15 @@ def get_joined_events(
     
     user_in_event_db = db_event.merge(current_user)
     user_events = db_event.query(EventBase).filter(EventBase.attendees.contains(user_in_event_db)).all()
-
+    joined_event_ids = {e.uid for e in user_in_event_db.events}
 
 
     return templates.TemplateResponse("profile_events.html", {
         "request": request,
         "user_events": user_events,
-        "is_organizer": current_user.is_organizer
+        "is_organizer": current_user.is_organizer,
+        'username': current_user.username if current_user else None,
+        "joined_event_ids": joined_event_ids
     })
 
 

@@ -156,8 +156,34 @@ html{
   cursor: pointer;
   text-decoration: none;
   border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button.join-btn{
+  align-items: right;
+  padding: 10px 16px;
+  font-size: 16px;
+  background-color:var(--primary);
+  color: var(--text);
+  border: 5px;
+  border-radius: 6px;
+  border-color: var(--background);
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+
+
+button:hover {
+  background-color:var(--primary-600);
+  text-decoration: none;
+  border: 1px solid #ccc;
   border-radius: 4px;
 }
+
+
 
 .page-container {
   max-width: 1200px; /* or any width that fits your layout */
@@ -171,7 +197,6 @@ html{
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-
 
 
 .menu {
@@ -220,6 +245,36 @@ html{
   display: flex;
   flex-direction: column;
 }
+
+
+.scrollable-event-list-home {
+  max-height: 250px;
+  overflow-y: scroll;
+  overflow-x: auto; /* Prevent horizontal scroll */
+  padding-right: 10px;
+  margin-top: 10px;
+  background-color: var(--background-800);
+  border: 1px solid var(--background-600);
+  border-radius: 6px;
+  box-sizing: border-box; /* Include padding in width/height */
+  scroll-behavior: smooth; /* Smooth scrolling */
+  width: 100%;
+}
+
+/* Optional: Pretty scroll styling */
+.scrollable-event-list-home::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollable-event-list-home::-webkit-scrollbar-thumb {
+  background-color: var(--primary-500);
+  border-radius: 5px;
+}
+
+.scrollable-event-list-home::-webkit-scrollbar-track {
+  background-color: var(--background-700);
+}
+
 
 .right {
   background-color:var(--background-800);
@@ -629,6 +684,19 @@ html{
 }
 
 
+/* Profile event refresh button */
+
+.refresh-container {
+  display: flex;
+  justify-content: flex-end; 
+  margin-top: 10px;
+}
+
+.refresh-btn {
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
 .scrollable-event-list {
   max-height: 250px;
   overflow-y: scroll;
@@ -666,6 +734,42 @@ html{
   box-shadow: 0 2px 4px var(--background-900);
   color: var(--text);
 }
+
+.event-card-home {
+  padding: 10px;
+  margin-bottom: 8px;
+  background-color: var(--background-700);
+  border: 1px solid var(--background-600);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px var(--background-900);
+  color: var(--text);
+}
+
+
+.scroll-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* ✅ Centered vertically */
+}
+
+.event-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.event-details {
+  flex-grow: 1;
+}
+
+.scroll-join-button {
+  display: flex;
+  align-items: center;  /* Vertically center */
+  justify-content: flex-end;
+  padding-left: 10px;
+}
+
 
 
 /* Calendar */

@@ -46,6 +46,7 @@
         <div class="search-section">
           <h2 style="text-align:center;">Event Search</h2>
 
+          <!-- Search Box -->
           <div class="search-box">
             <div class="search-centered">
               <div class="search">
@@ -55,7 +56,54 @@
                 </form>
               </div>
             </div>
+            <!-- End Search Box-->
+
+ 
+            <div class="search-centered">
+              
+              <div class="scrollable-event-list-home">
+                {% if all_events %}
+                  {% for event in all_events %}
+                    <div class="event-card">
+                      <div class="event-inner"> <!-- This is the flex wrapper -->
+      
+                        <div class="event-details">
+                          <span><b>Organizer:</b> {{ event.organizer }}</span><br>
+                          <span><b>Event Created:</b> {{ event.date.strftime('%Y-%m-%d') }}</span><br>
+                          <span><b>Start Time:</b> {{ event.start_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
+                          <span><b>End Time:</b> {{ event.end_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
+                          <span><b>Location:</b> {{ event.location }}</span><br>
+                          <span><b>Description:</b> {{ event.description }}</span><br>
+                          <span><b>Tags:</b> {{ event.tags }}</span>
+                        </div>
+      
+                        <div class="scroll-join-button">
+                          {% if username %}
+                          {% set is_joined = event.uid in joined_event_ids %}
+                          <button
+                            class="join-btn"
+                            onclick="toggleJoin({{ event.uid }}, this)"
+                            data-joined="{{ 'true' if is_joined else 'false' }}"
+                          >
+                            {{ 'Joined!' if is_joined else 'Join' }}
+                          </button>
+                        {% else %}
+                          <small style="color: gray;">Login to join</small>
+                        {% endif %}
+                        </div>
+      
+                      </div>
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <p style="color: var(--text-300); font-style: italic;">No events available.</p>
+                {% endif %}
+              </div>
+            </div>
           </div>
+
+
+
         </div>
       </div>
 
@@ -99,6 +147,39 @@
   </div>
 
   <script>
+
+      // if user clicked join event
+      function toggleJoin(eventId, button) {
+        const isJoined = button.getAttribute("data-joined") === "true";
+        const endpoint = isJoined ? `/api/unjoin_event/${eventId}` : `/api/join_event/${eventId}`;
+      
+        fetch(endpoint, {
+          method: "POST",
+        })
+        .then(response => {
+          if (response.ok) {
+            if (isJoined) {
+              button.innerText = "Join";
+              button.setAttribute("data-joined", "false");
+              button.classList.remove("joined");
+            } else {
+              button.innerText = "Joined!";
+              button.setAttribute("data-joined", "true");
+              button.classList.add("joined");
+            }
+          } else {
+            return response.json().then(data => alert("Error: " + data.detail));
+          }
+        })
+        .catch(error => {
+          console.error("Request failed:", error);
+          alert("Something went wrong.");
+        });
+      }
+      
+
+
+    // Events
     function showEventDetails(eventId) {
       fetch(`/api/event/${eventId}`)
         .then(res => {
@@ -121,6 +202,7 @@
         });
     }
   
+    //Modal for calendar
     function closeModal() {
       document.getElementById("eventModal").style.display = "none";
     }
@@ -154,6 +236,7 @@
     });
   </script>
   
+  // Calendar
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {

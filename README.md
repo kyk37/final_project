@@ -13,7 +13,7 @@
 ---> https?
 
 ## -- Basic Requirements --
-- [ ] Landing Page (with list of events, and event title,time, location, type
+- [ ] Landing Page (with list of events, and event title, time, location, type)
 - [ ] Search function to find events using tags/keywords
 - [ ] Users can view eachother's details
 - [X] Registration/login portal.
@@ -26,7 +26,7 @@
 ## -- Tech Reqs --
 - [ ] User friendly web interface
 - [ ] should support many users
-- [ ] persistent storage (Do not store in plain text) (Hash/encryption) Mysql?
+- [X] persistent storage (Do not store in plain text) (Hash/encryption) Mysql?
 - [ ] 75% code coverage for unit tests
 
 
