@@ -92,18 +92,17 @@
                         <div class="scroll-join-button">
                           {% if is_organizer and event.owner_uid == user_id %}
                           <div class="scroll-join-button">
-                            <button class="edit-btn" onclick="openEditModal({{ event.uid }})">Edit Event</button>
-                            <button class="cancel-btn" onclick="cancelEvent({{ event.uid }})">Cancel Event</button>
-                          </div>
-                        {% else %}
-                        
-                          <div class="scroll-join-button">
-                            {% if event.uid in joined_event_ids %}
-                              <button class="join-btn" onclick="toggleJoin({{ event.uid }}, this)" data-joined="true">Joined!</button>
+                            {% if event.archived %}
+                              <button class="edit-btn" disabled style="opacity: 0.5; cursor: not-allowed;">Edit Event</button>
+                              <button class="cancel-btn" disabled style="opacity: 0.5; cursor: not-allowed;">Cancel Event</button>
                             {% else %}
-                              <button class="join-btn" onclick="toggleJoin({{ event.uid }}, this)" data-joined="false">Join</button>
+                              <button class="edit-btn" onclick="openEditModal({{ event.uid }})">Edit Event</button>
+                              <button class="cancel-btn" onclick="cancelEvent({{ event.uid }})">Cancel Event</button>
                             {% endif %}
                           </div>
+                        
+                        
+                  
                         {% endif %}
                         
                         </div>
@@ -119,7 +118,11 @@
             </div>
 
           <div class="refresh-container">
-            <button class="join-btn refresh-btn" onclick="refresh()">Refresh List</button>
+            <span id="archived-status" style="margin-right: auto; font-size: 14px; color: var(--text-300); padding: 8px;">
+              Archived: Hidden
+            </span>
+            <button class="join-btn refresh-btn"  style="margin-right: 10px;"onclick="toggleArchivedView();">View Archived</button>
+            <button class="join-btn refresh-btn"  style="margin-right: 10px;"onclick="refresh()">Refresh List</button>
           </div>
           
         </div>
@@ -348,6 +351,35 @@
 
     </script>
 
+
+    <script>
+      function updateArchivedStatusLabel() {
+        const params = new URLSearchParams(window.location.search);
+        const statusEl = document.getElementById("archived-status");
+        const isArchivedVisible = params.get("archived") === "true";
+        statusEl.textContent = "Archived: " + (isArchivedVisible ? "Visible" : "Hidden");
+      }
+    
+      function toggleArchivedView() {
+        const url = new URL(window.location.href);
+        const params = url.searchParams;
+    
+        const currentlyVisible = params.get("archived") === "true";
+        if (currentlyVisible) {
+          params.delete("archived");
+        } else {
+          params.set("archived", "true");
+        }
+    
+        window.location.href = `${url.pathname}?${params.toString()}`;
+      }
+    
+      // Call this once when the page loads
+      updateArchivedStatusLabel();
+    </script>
+    
+    
+
     <script>
       // Organizer page modal
       document.querySelectorAll('.organizer-link').forEach(link => {
@@ -421,6 +453,7 @@
         document.getElementById("event-details-modal").style.display = "none";
       });
     
+
       // Close when clicking outside modal
       window.addEventListener("click", function(e) {
         const eventModal = document.getElementById("event-details-modal");

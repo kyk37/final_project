@@ -423,7 +423,8 @@ def get_joined_events(
     db_event: Session = Depends(get_event_session),
     current_user: UserBase = Depends(get_current_user),
     page: int = 1,
-    per_page: int = 20
+    per_page: int = 20,
+    archived: bool = False
 ):
     if current_user is None:
         response = RedirectResponse(url="/login", status_code=303)
@@ -433,12 +434,17 @@ def get_joined_events(
     user = db_event.query(UserBase).filter(UserBase.uid == current_user.uid).first()
     if not user:
         return RedirectResponse(url="/login", status_code=303)
+    
+    # Filter user events by archived status
+    if archived:
+        filtered_events = [e for e in user.events if e.archived]
+    else:
+        filtered_events = [e for e in user.events if not e.archived]
+   
+    total_events = len(filtered_events)
+    paginated = filtered_events[(page - 1) * per_page: page * per_page]
 
-    all_events = user.events  # this pulls joined events from relationship
-    total_events = len(all_events)
-    paginated = all_events[(page - 1) * per_page: page * per_page]
-
-    joined_event_ids = {e.uid for e in all_events}
+    joined_event_ids = {e.uid for e in user.events}
     attendee_counts = {event.uid: len(event.attendees) for event in paginated}
     event_titles = {event.uid: event.title for event in paginated}
     attendee_names = {
@@ -459,36 +465,68 @@ def get_joined_events(
         "attendee_names": attendee_names,
         "event_title": event_titles,
         "user_id": current_user.uid,
-        "is_organizer": current_user.is_organizer
+        "is_organizer": current_user.is_organizer,
+        "archived": archived  # optionally pass this to template
     })
 
 
+# @app.get("/profile/events")
+# def get_joined_events(
+#     request: Request,
+#     db_event: Session = Depends(get_event_session),
+#     current_user: UserBase = Depends(get_current_user),
+#     page: int = 1,
+#     per_page: int = 20,
+#     archived: bool = False
+# ):
+#     if current_user is None:
+#         response = RedirectResponse(url="/login", status_code=303)
+#         response.set_cookie("message", "Please log in to access this page", max_age=5)
+#         return response
 
-@app.get("/event/{event_id}", response_class=HTMLResponse)
-def event_detail(
-    request: Request,
-    event_id: int,
-    db_event: Session = Depends(get_event_session),
-    current_user: UserBase = Depends(get_current_user)
-):
-    event = db_event.query(EventBase).filter(EventBase.uid == event_id).first()
-    if current_user is None:
-        return RedirectResponse(url="/login", status_code=303)
+#     user = db_event.query(UserBase).filter(UserBase.uid == current_user.uid).first()
+#     if not user:
+#         return RedirectResponse(url="/login", status_code=303)
 
-    if not current_user.is_organizer:
-        raise HTTPException(status_code=403, detail="Access forbidden: Not an organizer")
+#     if archived and current_user.is_organizer:
+#         # Show all archived events organized by this user
+#         query = db_event.query(EventBase).filter(
+#             EventBase.owner_uid == current_user.uid,
+#             EventBase.archived == True
+#         )
+#         all_events = query.all()
+#     else:
+#         # Default behavior: show events the user joined
+#         all_events = user.events
 
-    event = db_event.query(EventBase).filter(EventBase.uid == event_id).first()
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    return templates.TemplateResponse("event_detail.html", {
-        "request": request,
-        "event": event,
-        "username": current_user.username if current_user else None,
-        "attendee_count": len(event.attendees),
-        "is_signed_up": current_user in event.attendees if current_user else False
-    })
+#     total_events = len(all_events)
+#     paginated = all_events[(page - 1) * per_page: page * per_page]
+
+#     joined_event_ids = {e.uid for e in all_events}
+#     attendee_counts = {event.uid: len(event.attendees) for event in paginated}
+#     event_titles = {event.uid: event.title for event in paginated}
+#     attendee_names = {
+#         event.uid: [f"{u.first_name} {u.last_name}" for u in event.attendees]
+#         for event in paginated
+#     }
+
+#     total_pages = (total_events + per_page - 1) // per_page
+
+#     return templates.TemplateResponse("profile_events.html", {
+#         "request": request,
+#         "username": current_user.username,
+#         "user_events": paginated,
+#         "page": page,
+#         "total_pages": total_pages,
+#         "joined_event_ids": joined_event_ids,
+#         "attendee_counts": attendee_counts,
+#         "attendee_names": attendee_names,
+#         "event_title": event_titles,
+#         "user_id": current_user.uid,
+#         "is_organizer": current_user.is_organizer,
+#         "viewing_archived": archived
+#     })
+
     
 @app.get("/profile/edit")
 def prof_edit(request: Request, current_user: Optional[UserBase] = Depends(get_current_user)):
