@@ -5,6 +5,9 @@ from src.event_model import Events
 from datetime import datetime, timedelta, date
 from src.usr_model import User
 import random
+from random import randint, choice
+from faker import Faker
+faker = Faker()
 
 def create_startup_users(db: Session):
     organizer_map = {}
@@ -32,7 +35,7 @@ def create_startup_users(db: Session):
             created_at=datetime.now(),
             is_organizer=True,
             admin= True,
-            profile_image_url="/static/defaults/default_avatar.jpg"
+            profile_image_url=f"/static/defaults/variant_{random.randint(0, 10)}.jpg",
         )
         db.add(admin_user)
         db.commit()
@@ -53,7 +56,7 @@ def create_startup_users(db: Session):
             last_name="User",
             created_at=datetime.now(),
             is_organizer=False,
-            profile_image_url="/static/defaults/default_avatar.jpg",
+            profile_image_url=f"/static/defaults/variant_{random.randint(0, 10)}.jpg",
             admin=True
         )
         db.add(test_user)
@@ -88,15 +91,17 @@ def create_startup_users(db: Session):
             created_at=datetime.now(),
             is_organizer=True,
             admin=False,
-            profile_image_url="/static/defaults/default_avatar.jpg",
-            about=f"This is a page about the {org_name}"
+            profile_image_url=f"/static/defaults/variant_{random.randint(0, 10)}.jpg",
+            about=f"This is a page about the {org_name}",
+            phone=faker.phone_number(),
+            address=faker.address(),
+            age=faker.random_int(min=18, max=100) 
         )
         db.add(organizer)
         db.commit()
         db.refresh(organizer) 
         organizer_map[org_name] = organizer.uid
         print(f" Created organizer '{username}' with ID: {organizer.uid}")
-
 
     return organizer_map
 
@@ -124,7 +129,7 @@ def create_events(event_db: Session, organizer_map: dict[str, int]):
     organizers = list(organizer_map.keys())
     types = ["Class", "Meeting", "Workshop", "Gym Class", "Event"]
     tags = ["tech, beginner", "health, wellness", "career, resume", "project, collaboration", "fun, social"]
-    images = ["/static/img/python_poster.png", "/static/img/project_meeting.png", "/static/img/yoga_class.jpg"]
+    images = ["/static/img/python_poster.png", "/static/img/project_meeting.png", "/static/img/yoga_class.png"]
 
     now = datetime.now()
     start_range = now - timedelta(days=30)
@@ -161,7 +166,7 @@ def create_events(event_db: Session, organizer_map: dict[str, int]):
             event_type=random.choice(types),
             organizer=organizer_name,
             tags=random.choice(tags),
-            image_urls=random.choice(images),
+            image_urls=",".join(random.sample(images, 2)),
             description=f"This is a session on {title.lower()}",
             archived=start_time.date() < now.date()
         )

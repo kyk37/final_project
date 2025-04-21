@@ -41,7 +41,6 @@
 
         <div class="main">
           <div class="search-section">
-            <h2 style="text-align:center;">Account</h2>
             {% if no_org %}
               <div class="alert", style="color:red">{{ no_org }}</div>
             {% endif %}
@@ -50,15 +49,28 @@
               <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
                 <img src="{{ profile_image_url }}"
                     alt="Profile Picture"
-                    style="width:100px; height:100px; border-radius:50%; object-fit:cover; margin-bottom: 10px;">
+                    style="width:100px; height:100px; border-radius:50%; object-fit:cover; margin-bottom: 15px;">
         
-                <h4 style="margin: 5px 0;">{{ first_name }} {{ last_name }}</h4>
+                <h2 style="margin: 5px 0;"> {{ first_name }} {{ last_name }}</h4>
+                <h4 style="margin: 5px 0;"><b>Age:</b> {{ age }}</h4>
         
-                <p style="max-width: 400px; font-size: 14px; color: var(--text-300);">
+                <p style="max-width: 400px; font-size: 15px; color: var(--text-200);">
                   {{ about }}
                 </p>
               </div>
             </div>
+            
+            <div class="search-box">    
+              <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+              <h2 style="margin: 5px 0;"><u>Contact Info</u></h2><br>
+ 
+                <h4 style="margin: 5px 0;">Email: {{ email }}</h4><br>
+                <h4 style="margin: 5px 0;">Phone: {{ phone }}</h4><br>
+                <h4 style="margin: 5px 0;">Address: {{ address }}</h4><br>
+                
+              </div>
+            </div>
+
           </div>
         </div>
     

@@ -14,8 +14,8 @@
 
 ## -- Basic Requirements --
 - [X] Landing Page (with list of events, and event title, time, location, type)
-- [ ] Search function to find events using tags/keywords
-- [ ] Users can view eachother's details
+- [X] Search function to find events using tags/keywords
+- [X] Users can view each event's details, title, type, tags, organizer, time, location, preview images, and description.
 - [X] Registration/login portal.
 - [ ] Registered users can sign up for future events, and view number of registeres users signed up
 - [X] user profile page/settings. Show events with preview
