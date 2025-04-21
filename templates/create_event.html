@@ -1,15 +1,48 @@
 <!DOCTYPE html>
 <html data-theme="dark">
-  
+
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/static/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <title>Event Management Website</title>
+  <title>Create Event | Event Manager</title>
+  <style>
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1em;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .form-grid label {
+      font-weight: bold;
+    }
+
+    .form-grid input,
+    .form-grid textarea {
+      padding: 0.5em;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .success-message {
+      color: limegreen;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .error-message {
+      color: red;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
 </head>
 
 <body>
-  <div class=" page-container">
+  <div class="page-container">
+    <!-- Header -->
     <div class="header">
       <div class="header-left">
         <h1>Event Manager</h1>
@@ -20,32 +53,67 @@
       </div>
     </div>
 
+    <!-- Content -->
     <div class="content">
-    <div class="left">
-      <h2 style="text-align:center;">Account Settings</h2>
-      <div class="menu">
-        <a href="/profile/home" class="menuitem">Home</a>
-        <a href="/profile/edit" class="menuitem">Edit Profile</a>
-        <a href="/profile/security" class="menuitem">Security</a>
-        <a href="/profile/calendar" class="menuitem">Calendar</a>
-        <a href="/profile/events" class="menuitem">Events Joined</a>
-        {% if is_organizer %}
-        <a href="/organizer/create_event" class="menuitem">Create Event</a>
-        {% endif %}  
-        <div><br></div>
-        <a href="#" class="menuitem" onclick="logout()">Logout</a>
+      <div class="left">
+        <h2 style="text-align:center;">Account Settings</h2>
+        <div class="menu">
+          <a href="/profile/home" class="menuitem">Home</a>
+          <a href="/profile/edit" class="menuitem">Edit Profile</a>
+          <a href="/profile/security" class="menuitem">Security</a>
+          <a href="/profile/calendar" class="menuitem">Calendar</a>
+          <a href="/profile/events" class="menuitem">Events Joined</a>
+          {% if is_organizer %}
+          <a href="/organizer/create_event" class="menuitem">Create Event</a>
+          {% endif %}
+          <div><br></div>
+          <a href="#" class="menuitem" onclick="logout()">Logout</a>
+        </div>
       </div>
-    </div>
 
       <!-- Main Section -->
       <div class="main">
         <div class="search-section">
-          <h2 style="text-align:center;">Create Event</h2> <!--Username can go here-->
+          <h2 style="text-align:center;">Create Event</h2>
 
-          <div class="search-box">
-            <h3> Settings to edit here, and adjust the database</h3>
+          {% if success %}
+            <p class="success-message">Event "{{ event.title }}" created successfully!</p>
+          {% elif error %}
+            <p class="error-message">{{ error }}</p>
+          {% endif %}
 
-          </div>
+          <form method="post" action="/organizer/create_event" class="form-grid">
+            <label for="title">Event Title:</label>
+            <input type="text" name="title" required>
+
+            <label for="description">Description:</label>
+            <textarea name="description" rows="4"></textarea>
+
+            <label for="event_date">Date (YYYY-MM-DD):</label>
+            <input type="date" name="event_date" required>
+
+            <label for="event_start_time">Start Time (HH:MM):</label>
+            <input type="time" name="event_start_time" required>
+
+            <label for="event_end_time">End Time (HH:MM):</label>
+            <input type="time" name="event_end_time" required>
+
+            <label for="location">Location:</label>
+            <input type="text" name="location" required>
+
+            <label for="event_type">Event Type:</label>
+            <input type="text" name="event_type" required>
+
+            <label for="event_tags">Tags (comma-separated):</label>
+            <input type="text" name="event_tags">
+
+            <label for="event_img_urls">Image URLs (comma-separated):</label>
+            <input type="text" name="event_img_urls">
+
+            <div style="text-align:center; margin-top: 1em;">
+              <button type="submit" class="login-btn">Create Event</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -53,38 +121,33 @@
     <!-- Footer -->
     <div class="footer">
       <div class="botnav">
-        <a class="active" href="#home">Home</a>
+        <a class="active" href="/">Home</a>
         <a href="#About">About</a>
         <a href="#pPolicy">Privacy Policy</a>
         <a href="#Contact">Contact Us</a>
-        <a>© copyright Does not Exist </a>
+        <a>© copyright Does not Exist</a>
       </div>
     </div>
-    
   </div>
 
-  
-    <script>
-      const toggleTheme = () => {
-        const body = document.body;
-        const isDark = body.getAttribute('data-theme') === 'dark';
-        body.setAttribute('data-theme', isDark ? 'light' : 'dark');
-      };
+  <script>
+    const toggleTheme = () => {
+      const body = document.body;
+      const isDark = body.getAttribute('data-theme') === 'dark';
+      body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    };
 
-      function logout() {
-        fetch("/logout", {
-          method: "POST"
-        }).then(() => {
-          window.location.href = "/login";
-        }).catch(err => {
-          alert("Logout failed.");
-          console.error(err);
-        });
-      }
-
-            
-    </script>
-</div>
+    function logout() {
+      fetch("/logout", {
+        method: "POST"
+      }).then(() => {
+        window.location.href = "/login";
+      }).catch(err => {
+        alert("Logout failed.");
+        console.error(err);
+      });
+    }
+  </script>
 </body>
 
 </html>

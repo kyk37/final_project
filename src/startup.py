@@ -25,11 +25,12 @@ def create_startup_users(db: Session):
     if not admin_user:
         # Create admin user with its own salt
         salt_admin = bcrypt.gensalt(rounds=12)
-        hashed_admin_password = bcrypt.hashpw(admin_password.encode('utf-8'), salt_admin)
+        hashed_pw = bcrypt.hashpw(admin_password.encode(), salt_admin).decode()
+
         admin_user = User(
             username=admin_username,
             email=admin_email,
-            password_hashed=hashed_admin_password,
+            password_hashed=hashed_pw,
             first_name="admin_first_name",
             last_name="admin_last_name",
             created_at=datetime.now(),
@@ -47,11 +48,12 @@ def create_startup_users(db: Session):
     if not test_user:
         # Create test user with its own salt
         salt_test = bcrypt.gensalt(rounds=12)
-        hashed_test_password = bcrypt.hashpw(test_password.encode('utf-8'), salt_test)
+        hashed_test_pw = bcrypt.hashpw(test_password.encode('utf-8'), salt_admin).decode('utf-8')
+
         test_user = User(
             username=test_username,
             email=test_email,
-            password_hashed=hashed_test_password,
+            password_hashed=hashed_test_pw,
             first_name="Test",
             last_name="User",
             created_at=datetime.now(),
@@ -80,12 +82,13 @@ def create_startup_users(db: Session):
             continue
 
         salt = bcrypt.gensalt(rounds=12)
-        hashed_password = bcrypt.hashpw(password.encode("utf-8"), salt)
+        hashed_org_password = bcrypt.hashpw(password.encode('utf-8'), salt_admin).decode('utf-8')
+
 
         organizer = User(
             username=username,
             email=email,
-            password_hashed=hashed_password,
+            password_hashed=hashed_org_password,
             first_name=org_name.split()[0],
             last_name=org_name.split()[-1] if len(org_name.split()) > 1 else "Team",
             created_at=datetime.now(),

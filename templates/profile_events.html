@@ -45,11 +45,12 @@
           <h2 style="text-align:center;">Events Your Attending</h2>
           <div class="search-box">
             
+              <!-- Event Scroll Area -->
               <div class="scrollable-event-list-home">
                 {% if user_events %}
                   {% for event in user_events %}
                     <div class="event-card">
-                      <div class="event-inner"> <!-- This is the flex wrapper -->
+                      <div class="event-inner"> 
       
                         <div class="event-details">
                           <span><b>Event Name:</b> {{ event.title }}</span><br>
@@ -117,6 +118,7 @@
               </div>
             </div>
 
+          <!-- Buttons to refresh/toggle refresh -->
           <div class="refresh-container">
             <span id="archived-status" style="margin-right: auto; font-size: 14px; color: var(--text-300); padding: 8px;">
               Archived: Hidden
@@ -131,7 +133,7 @@
     </div>
 
 
-
+  <!-- Footer -->
   <div class="footer">
     <div class="botnav">
       <a class="active" href="#home">Home</a>
