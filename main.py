@@ -639,7 +639,7 @@ def post_create_event(
     organizer: Optional[UserBase] = Depends(get_current_user),
     title: str = Form(...),
     description: str = Form(None),
-    event_date: str = Form(...),
+    event_date: str = Form(...), 
     event_start_time: str = Form(...),
     event_end_time: str = Form(...),
     location: str = Form(...),
@@ -647,6 +647,7 @@ def post_create_event(
     event_tags: str = Form(None),
     event_img_urls: str = Form(None)
 ):
+    ''' Create Events!'''
     if organizer is None or not organizer.is_organizer:
         response = RedirectResponse(url="/login", status_code=303)
         response.set_cookie("message", "Please log in as an organizer", max_age=5)
@@ -656,6 +657,10 @@ def post_create_event(
         parsed_date = datetime.strptime(event_date, "%Y-%m-%d").date()
         parsed_start_time = datetime.strptime(event_start_time, "%H:%M").time()
         parsed_end_time = datetime.strptime(event_end_time, "%H:%M").time()
+        start_dt = datetime.combine(parsed_date, parsed_start_time)
+        end_dt = datetime.combine(parsed_date, parsed_end_time)
+
+        is_archived = end_dt < datetime.now()
 
         full_organizer_name = f"{organizer.first_name} {organizer.last_name}"
 
@@ -663,25 +668,24 @@ def post_create_event(
             owner_uid=organizer.uid,
             title=title,
             date=parsed_date,
-            start_time=parsed_start_time,
-            end_time=parsed_end_time,
+            start_time=start_dt,
+            end_time=end_dt,
             location=location,
             event_type=event_type,
             organizer=full_organizer_name,
             tags=event_tags,
             image_urls=event_img_urls,
-            description=description
+            description=description,
+            archived=is_archived
         )
-
+        
+        organizer_in_db = db.merge(organizer) 
+        new_event.attendees.append(organizer_in_db)
+        
         db.add(new_event)
         db.commit()
         db.refresh(new_event)
 
-        with open("created_events.txt", "a", encoding="utf-8") as f:
-            f.write(f"Title: {title}\n")
-            f.write(f"Description: {description}\n")
-            f.write(f"Date: {event_date}\n")
-            f.write("----------\n")
 
         return templates.TemplateResponse("create_event.html", {
             "request": request,
@@ -692,7 +696,7 @@ def post_create_event(
     except ValueError:
         return templates.TemplateResponse("create_event.html", {
             "request": request,
-            "error": "Invalid date or time format. Please use YYYY-MM-DD and HH:MM."
+            "error": "Invalid datetime format. Please use YYYY-MM-DDTHH:MM (datetime-local)."
         })
 
     except Exception as e:
@@ -703,6 +707,22 @@ def post_create_event(
         })
 
     
+    
+@app.get("/organizer/create_event", response_class=HTMLResponse)
+def get_create_event(
+    request: Request,
+    current_user: Optional[UserBase] = Depends(get_current_user)
+):
+    if current_user is None or not current_user.is_organizer:
+        response = RedirectResponse(url="/login", status_code=303)
+        response.set_cookie("message", "Please log in as an organizer", max_age=5)
+        return response
+
+    return templates.TemplateResponse("create_event.html", {
+        "request": request,
+        "is_organizer": current_user.is_organizer
+    })
+
 from fastapi import HTTPException
 
 ...
@@ -751,62 +771,6 @@ def delete_event(event_id: int, db: Session = Depends(get_event_session), curren
     return {"message": "Event deleted"}
 
 
-
-@app.post("/organizer/create_event")
-def post_create_event(
-    request: Request,
-    db: Session = Depends(get_event_session),
-    organizer: Optional[UserBase] = Depends(get_current_user),
-    title: str = Form(...),
-    description: str = Form(None),
-    event_date: str = Form(None),
-    event_start_time: str = Form(None),
-    event_end_time: str = Form(None),
-    location: str = Form(None),
-    event_type: str = Form(None),
-    event_tags: str = Form(None),
-    event_img_urls: str = Form(None)
-):
-    """
-    1) Create a new event in the database
-    2) Append the event info to created_events.txt
-    """
-    if organizer is None:
-        response = RedirectResponse(url="/login", status_code=303)
-        response.set_cookie("message", "Please log in to access this page", max_age = 5)
-        return response
-    
-    if organizer.is_organizer == False:
-        return RedirectResponse(url="/login", status_code=303)
-    
-    # 1) Insert event into DB
-    full_organizer_name = f"{organizer.first_name} {organizer.last_name}"
-    new_event = EventBase(
-        owner_uid = organizer.uid,
-        title=title,
-        date=event_date,
-        start_time = event_start_time,
-        end_time = event_end_time,
-        location = location,
-        event_type = event_type,
-        organizer = full_organizer_name,
-        tags = event_tags,
-        image_urls = event_img_urls,
-        description=description
-    )
-
-    db.add(new_event)
-    db.commit()
-    db.refresh(new_event)
-
-    # 2) Write details to text file || IDK What purpose this serves ~Kyle
-    with open("created_events.txt", "a", encoding="utf-8") as f:
-        f.write(f"Title: {title}\n")
-        f.write(f"Description: {description}\n")
-        f.write(f"Date: {event_date}\n")
-        f.write("----------\n")
-
-    return templates.TemplateResponse("create_event.html", {"request": request})
 
 
 @app.get("/organizer/{organizer_id}")
