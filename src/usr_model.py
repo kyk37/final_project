@@ -19,7 +19,11 @@ class User(Base):
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
     is_organizer: Mapped[bool] = mapped_column(Boolean, default=False)
     admin: Mapped[bool] = mapped_column(Boolean, default=False)
-    
+
+    phone: Mapped[str] = mapped_column(String, nullable=True)
+    address: Mapped[str] = mapped_column(String, nullable=True)
+    age: Mapped[int] = mapped_column(Integer, nullable=True)
+   
     about: Mapped[str] = mapped_column(String, nullable=True)
     profile_image_url: Mapped[str] = mapped_column(
         String,

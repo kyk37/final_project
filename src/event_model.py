@@ -4,10 +4,10 @@ from db.base import Base
 from sqlalchemy import JSON
 
 event_signups = Table(
-    'event_signups',
+    "event_signups",
     Base.metadata,
-    Column('event_id', ForeignKey('events.uid'), primary_key=True),
-    Column('user_id', ForeignKey('users.uid'), primary_key=True)
+    Column("user_id", ForeignKey("users.uid"), primary_key=True),
+    Column("event_id", ForeignKey("events.uid"), primary_key=True)
 )
 
 class Events(Base):
@@ -29,9 +29,10 @@ class Events(Base):
     
     attendees: Mapped[list["User"]] = relationship(
         "User",
-        secondary="event_signups",
+        secondary=event_signups,
         back_populates="events"
     )
+
 
     def __repr__(self):
         return (

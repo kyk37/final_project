@@ -174,8 +174,6 @@ button.join-btn{
   border-radius: 5px;
 }
 
-
-
 button:hover {
   background-color:var(--primary-600);
   text-decoration: none;
@@ -184,6 +182,36 @@ button:hover {
 }
 
 
+button.edit-btn{
+  align-items: right;
+  padding: 10px 16px;
+  font-size: 16px;
+  background-color:var(--primary);
+  color: var(--text);
+  border: 5px;
+  border-radius: 6px;
+  border-color: var(--background);
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+
+button.cancel-btn{
+  align-items: right;
+  padding: 10px 16px;
+  font-size: 16px;
+  background-color:var(--primary);
+  color: var(--text);
+  border: 5px;
+  border-radius: 6px;
+  border-color: var(--background);
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
 
 .page-container {
   max-width: 1200px;
@@ -289,6 +317,17 @@ button:hover {
 }
 
 
+.tag {
+  display: inline-block !important;
+  background-color: var(--primary-500) !important;
+  color: var(--text) !important;
+  padding: 2px 8px !important;
+  margin: 2px 4px 2px 0 !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  border: 1px solid var(--primary-700) !important;
+}
+
 .login-wrapper {
   flex: 1;
   display: flex;
@@ -384,14 +423,15 @@ button:hover {
 }
 
 .modal {
+  display: none;
   position: fixed;
-  z-index: 10;
-  left: 0;
+  z-index: 999;
   top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0,0,0,0.6);
+  background-color: rgba(0,0,0,0.7);
 }
 
 .modal-content {
@@ -404,6 +444,21 @@ button:hover {
   border-radius: 10px;
 }
 
+#modal-event-images img {
+  max-height: 120px;
+  border-radius: 8px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: zoom-in;
+}
+
+#modal-event-images img:hover {
+  transform: scale(3); 
+  z-index: 10;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+  position: relative;
+}
+
+
 .close-button {
   float: right;
   font-size: 24px;
@@ -413,6 +468,26 @@ button:hover {
 .scrollable-event-list {
   max-height: 400px;
   overflow-y: auto;
+}
+
+
+/* Make all anchor tags always the same color, including after visiting */
+a,
+a:visited,
+.menuitem:visited,
+.organizer-link:visited,
+.event-details-link:visited {
+  color: var(--text-500); /* or var(--text-100) or a custom purple */
+  text-decoration: none;
+}
+
+/* Optional: Add hover effect if you want */
+a:hover,
+.menuitem:hover,
+.organizer-link:hover,
+.event-details-link:hover {
+  color: var(--text-500);
+  background-color: var(--primary-600); /* optional */
 }
 
 
@@ -604,6 +679,21 @@ button:hover {
   resize: vertical;
 }
 
+#editEventModal textarea#edit-description {
+  padding-top: 40px !important;
+  padding: 20px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  height: 100px;
+  resize: vertical;
+  background-color: var(--background-700);
+  color: var(--text);
+  margin-top: 10px;
+}
+
+#edit-event-modal textarea#edit-description {
+  padding-top: 40px !important;
+}
 
 /* Edit Profile */
 .form-row {
@@ -689,7 +779,8 @@ button:hover {
 /* Profile event refresh button */
 .refresh-container {
   display: flex;
-  justify-content: flex-end; 
+  justify-content: flex-end;
+  gap: 10px;
   margin-top: 10px;
 }
 

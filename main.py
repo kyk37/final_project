@@ -21,7 +21,7 @@ from fastapi import Query
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from db.session import get_user_session, get_event_session
-
+from fastapi import Body
 
 from src.usr_model import User as UserBase
 from src.event_model import Events as EventBase
@@ -32,7 +32,7 @@ from src.startup import create_startup_users, create_events
 
 from calendar_router import calendar_router
 
-from datetime import date
+from datetime import datetime, timedelta, date
 
 from db.base import Base
 
@@ -123,7 +123,6 @@ def main(
     '''
     from datetime import timedelta
 
-
     today = date.today()
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=6)
@@ -142,7 +141,9 @@ def main(
     # Search all Events that are NOT archived
     query = db_event.query(EventBase).filter(EventBase.archived == False)
     all_events = query.offset((page - 1) * per_page).limit(per_page).all()
-
+    attendee_counts = {event.uid: len(event.attendees) for event in all_events}
+    event_titles = {event.uid: (event.title) for event in all_events}
+    
     total_events = query.count()
     total_pages = (total_events + per_page - 1) // per_page
 
@@ -153,7 +154,9 @@ def main(
         'all_events': all_events,
         'page': page,
         'total_pages': total_pages,
-        'joined_event_ids': joined_event_ids
+        'joined_event_ids': joined_event_ids,
+        'attendee_counts': attendee_counts,
+        'event_title': event_titles
     })
 
 
@@ -169,12 +172,16 @@ def get_event_summary(
 
     return {
         "title": event.title,
+        "event_type": event.event_type,
+        "tags": event.tags,
+        "organizer": event.organizer,
         "date": event.date.strftime("%B %d, %Y"),
         "start_time": event.start_time.strftime("%I:%M %p"),
         "end_time": event.end_time.strftime("%I:%M %p"),
         "location": event.location,
+        "description": event.description,
+        "image_urls": event.image_urls
     }
-
 
 @app.post("/api/join_event/{event_id}")
 def join_event(
@@ -211,6 +218,9 @@ def unjoin_event(
     db: Session = Depends(get_event_session),
     current_user: UserBase = Depends(get_current_user)
 ):
+    '''
+        Leave Event
+    '''
     if current_user is None:
         raise HTTPException(status_code=401, detail="User must be logged in")
 
@@ -229,6 +239,63 @@ def unjoin_event(
     return {"message": "Successfully unjoined event"}
 
 
+
+# -----------------------------
+# Search Bar On home
+# -----------------------------
+
+@app.get("/search", response_class=HTMLResponse)
+def search_events(
+    request: Request,
+    search: Optional[str] = "",
+    db_event: Session = Depends(get_event_session),
+    current_user: Optional[UserBase] = Depends(get_current_user),
+    page: int = 1,
+    per_page: int = 20
+):
+    from datetime import timedelta
+    today = date.today()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+
+    events_this_week = []
+    joined_event_ids = set()
+
+    if current_user:
+        user_in_event_db = db_event.merge(current_user)
+        events_this_week = db_event.query(EventBase).filter(
+            EventBase.owner_uid == current_user.uid,
+            EventBase.date.between(start_of_week, end_of_week)
+        ).all()
+        joined_event_ids = {e.uid for e in user_in_event_db.events}
+
+    base_query = db_event.query(EventBase).filter(EventBase.archived == False)
+
+    if search:
+        base_query = base_query.filter(
+            EventBase.title.ilike(f"%{search}%") |
+            EventBase.description.ilike(f"%{search}%") |
+            EventBase.tags.ilike(f"%{search}%")
+        )
+
+    all_events = base_query.offset((page - 1) * per_page).limit(per_page).all()
+    attendee_counts = {event.uid: len(event.attendees) for event in all_events}
+    event_titles = {event.uid: (event.title) for event in all_events}
+    total_events = base_query.count()
+    total_pages = (total_events + per_page - 1) // per_page
+
+    return templates.TemplateResponse("home.html", {
+        "request": request,
+        "username": current_user.username if current_user else None,
+        "events_today": events_this_week,
+        "all_events": all_events,
+        "page": page,
+        "total_pages": total_pages,
+        "joined_event_ids": joined_event_ids,
+        "attendee_counts": attendee_counts,
+        "event_title": event_titles
+    })
+    
 # -----------------------------
 # LOGIN AND REGISTRATION
 # -----------------------------
@@ -309,6 +376,9 @@ def logout():
 # -----------------------------
 @app.get("/profile/home", response_class=HTMLResponse)
 def prof_main(request: Request, current_user: Optional[UserBase] = Depends(get_current_user)):
+    '''
+        Profile Homepage
+    '''
 
     if current_user is None:
         response = RedirectResponse(url="/login", status_code=303)
@@ -324,8 +394,12 @@ def prof_main(request: Request, current_user: Optional[UserBase] = Depends(get_c
         "first_name": current_user.first_name,
         "last_name": current_user.last_name,
         "about": current_user.about,
+        "email": current_user.email,
         "is_organizer": current_user.is_organizer,
-        "no_org": cookie_msg
+        "no_org": cookie_msg,
+        "age": current_user.age,
+        "phone": current_user.phone,
+        "address": current_user.address
     })
 
     if cookie_msg:
@@ -347,52 +421,112 @@ def prof_password(request: Request, current_user: Optional[UserBase] = Depends(g
 def get_joined_events(
     request: Request,
     db_event: Session = Depends(get_event_session),
-    current_user: UserBase = Depends(get_current_user)
+    current_user: UserBase = Depends(get_current_user),
+    page: int = 1,
+    per_page: int = 20,
+    archived: bool = False
 ):
     if current_user is None:
         response = RedirectResponse(url="/login", status_code=303)
         response.set_cookie("message", "Please log in to access this page", max_age=5)
         return response
-    
-    user_in_event_db = db_event.merge(current_user)
-    user_events = db_event.query(EventBase).filter(EventBase.attendees.contains(user_in_event_db)).all()
-    joined_event_ids = {e.uid for e in user_in_event_db.events}
 
+    user = db_event.query(UserBase).filter(UserBase.uid == current_user.uid).first()
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    # Filter user events by archived status
+    if archived:
+        filtered_events = [e for e in user.events if e.archived]
+    else:
+        filtered_events = [e for e in user.events if not e.archived]
+   
+    total_events = len(filtered_events)
+    paginated = filtered_events[(page - 1) * per_page: page * per_page]
+
+    joined_event_ids = {e.uid for e in user.events}
+    attendee_counts = {event.uid: len(event.attendees) for event in paginated}
+    event_titles = {event.uid: event.title for event in paginated}
+    attendee_names = {
+        event.uid: [f"{u.first_name} {u.last_name}" for u in event.attendees]
+        for event in paginated
+    }
+
+    total_pages = (total_events + per_page - 1) // per_page
 
     return templates.TemplateResponse("profile_events.html", {
         "request": request,
-        "user_events": user_events,
+        "username": current_user.username,
+        "user_events": paginated,
+        "page": page,
+        "total_pages": total_pages,
+        "joined_event_ids": joined_event_ids,
+        "attendee_counts": attendee_counts,
+        "attendee_names": attendee_names,
+        "event_title": event_titles,
+        "user_id": current_user.uid,
         "is_organizer": current_user.is_organizer,
-        'username': current_user.username if current_user else None,
-        "joined_event_ids": joined_event_ids
+        "archived": archived  # optionally pass this to template
     })
 
 
-@app.get("/event/{event_id}", response_class=HTMLResponse)
-def event_detail(
-    request: Request,
-    event_id: int,
-    db_event: Session = Depends(get_event_session),
-    current_user: UserBase = Depends(get_current_user)
-):
-    event = db_event.query(EventBase).filter(EventBase.uid == event_id).first()
-    if current_user is None:
-        return RedirectResponse(url="/login", status_code=303)
+# @app.get("/profile/events")
+# def get_joined_events(
+#     request: Request,
+#     db_event: Session = Depends(get_event_session),
+#     current_user: UserBase = Depends(get_current_user),
+#     page: int = 1,
+#     per_page: int = 20,
+#     archived: bool = False
+# ):
+#     if current_user is None:
+#         response = RedirectResponse(url="/login", status_code=303)
+#         response.set_cookie("message", "Please log in to access this page", max_age=5)
+#         return response
 
-    if not current_user.is_organizer:
-        raise HTTPException(status_code=403, detail="Access forbidden: Not an organizer")
+#     user = db_event.query(UserBase).filter(UserBase.uid == current_user.uid).first()
+#     if not user:
+#         return RedirectResponse(url="/login", status_code=303)
 
-    event = db_event.query(EventBase).filter(EventBase.uid == event_id).first()
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    return templates.TemplateResponse("event_detail.html", {
-        "request": request,
-        "event": event,
-        "username": current_user.username if current_user else None,
-        "attendee_count": len(event.attendees),
-        "is_signed_up": current_user in event.attendees if current_user else False
-    })
+#     if archived and current_user.is_organizer:
+#         # Show all archived events organized by this user
+#         query = db_event.query(EventBase).filter(
+#             EventBase.owner_uid == current_user.uid,
+#             EventBase.archived == True
+#         )
+#         all_events = query.all()
+#     else:
+#         # Default behavior: show events the user joined
+#         all_events = user.events
+
+#     total_events = len(all_events)
+#     paginated = all_events[(page - 1) * per_page: page * per_page]
+
+#     joined_event_ids = {e.uid for e in all_events}
+#     attendee_counts = {event.uid: len(event.attendees) for event in paginated}
+#     event_titles = {event.uid: event.title for event in paginated}
+#     attendee_names = {
+#         event.uid: [f"{u.first_name} {u.last_name}" for u in event.attendees]
+#         for event in paginated
+#     }
+
+#     total_pages = (total_events + per_page - 1) // per_page
+
+#     return templates.TemplateResponse("profile_events.html", {
+#         "request": request,
+#         "username": current_user.username,
+#         "user_events": paginated,
+#         "page": page,
+#         "total_pages": total_pages,
+#         "joined_event_ids": joined_event_ids,
+#         "attendee_counts": attendee_counts,
+#         "attendee_names": attendee_names,
+#         "event_title": event_titles,
+#         "user_id": current_user.uid,
+#         "is_organizer": current_user.is_organizer,
+#         "viewing_archived": archived
+#     })
+
     
 @app.get("/profile/edit")
 def prof_edit(request: Request, current_user: Optional[UserBase] = Depends(get_current_user)):
@@ -407,7 +541,11 @@ def prof_edit(request: Request, current_user: Optional[UserBase] = Depends(get_c
                                                             "last_name":  current_user.last_name,
                                                             "about": current_user.about,
                                                             "email":current_user.email,
-                                                            "is_organizer": current_user.is_organizer})
+                                                            "is_organizer": current_user.is_organizer,
+                                                            "age": current_user.age,
+                                                            "phone": current_user.phone,
+                                                            "address":current_user.address
+                                                            })
 
 
 @app.post("/profile/edit")
@@ -418,6 +556,10 @@ def update_profile_settings(
     password: Optional[str] = Form(None),
     profile_picture: Optional[UploadFile] = File(None),
     about: Optional[str] = Form(None),
+    age: Optional[str] = Form(...),
+    address: Optional[str] = Form(None),
+        phone: str = Form(..., pattern=r"^\d{10,15}$"),
+    
     db: Session = Depends(get_user_session),
     current_user: Optional[UserBase] = Depends(get_current_user)
 ):
@@ -449,7 +591,15 @@ def update_profile_settings(
 
     if about:
         current_user.about = about
-
+        
+    if age:
+        current_user.age = age
+    if phone:
+        current_user.phone = phone
+    if address:
+        current_user.address = address
+        
+        
     if profile_picture and profile_picture.filename:
         ext = os.path.splitext(profile_picture.filename)[-1]
         new_filename = f"profile_{current_user.uid}{ext}"
@@ -505,14 +655,18 @@ def get_user_calendar_events(
 
     return JSONResponse(content=events, media_type="application/json")
 
+
 @app.get("/api/user-events")
 def get_user_events(
     db: Session = Depends(get_event_session),
     current_user: UserBase = Depends(get_current_user)
 ):
+    ''' Events in the user profile pages'''
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
+    if not current_user:
+        return []
     # Reattach current_user to the event DB session
     user_in_event_db = db.merge(current_user)
 
@@ -521,7 +675,7 @@ def get_user_events(
 
     events_data = [
         {
-            "title": event.title,
+            "event_title": event.title,
             "start": event.start_time.isoformat(),
             "end": event.end_time.isoformat(),
             "description": event.description,
@@ -531,29 +685,6 @@ def get_user_events(
     ]
     return JSONResponse(content=events_data)
 
-
-# -----------------------------
-# Search
-# -----------------------------
-
-@app.get("/search", response_class=HTMLResponse)
-def search_events(request: Request, search: Optional[str] = "", db: Session = Depends(get_event_session)):
-    today = date.today()
-    query = db.query(EventBase).filter(EventBase.date >= today)
-
-    if search:
-        query = query.filter(
-            EventBase.title.ilike(f"%{search}%") |
-            EventBase.description.ilike(f"%{search}%") |
-            EventBase.tags.ilike(f"%{search}%")
-        )
-
-    matched_events = query.all()
-    return templates.TemplateResponse("home.html", {
-        "request": request,
-        "events_today": matched_events,
-        "username": get_current_user(request, db),
-    })
 
 # -----------------------------
 # Database Creation/Deletion
@@ -579,6 +710,56 @@ def get_create_event(request: Request, current_user: Optional[UserBase] = Depend
     
     return templates.TemplateResponse("create_event.html", {"request": request, "username": current_user.username, "is_organizer": current_user.is_organizer})
 
+    
+from fastapi import HTTPException
+
+...
+
+@app.put("/api/edit_event/{event_id}")
+def edit_event(event_id: int, data: dict, db: Session = Depends(get_event_session), current_user: UserBase = Depends(get_current_user)):
+    event = db.get(EventBase, event_id)
+
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    if event.owner_uid != current_user.uid:
+        raise HTTPException(status_code=403, detail="You are not authorized to edit this event")
+
+    if event.owner_uid and event.owner_uid not in [u.uid for u in event.attendees]:
+        organizer = db.query(UserBase).filter(UserBase.uid == event.owner_uid).first()
+        if organizer:
+            event.attendees.append(organizer)
+
+    event.title = data.get("title", event.title)
+    event.location = data.get("location", event.location)
+    event.tags = data.get("tags", event.tags)
+    event.description = data.get("description", event.description)
+    event.event_type = data.get("event_type", event.event_type)
+    event.image_urls = data.get("image_urls", event.image_urls)
+
+    try:
+        if data.get("start_time"):
+            event.start_time = datetime.fromisoformat(data["start_time"])
+        if data.get("end_time"):
+            event.end_time = datetime.fromisoformat(data["end_time"])
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Please use ISO 8601 format.")
+
+    db.commit()
+    return {"message": "Event updated successfully"}
+    
+
+@app.delete("/api/delete_event/{event_id}")
+def delete_event(event_id: int, db: Session = Depends(get_event_session), current_user: Optional[UserBase] = Depends(get_current_user)):
+    event = db.query(EventBase).filter(EventBase.uid == event_id, EventBase.owner_uid == current_user.uid).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found or unauthorized")
+    db.delete(event)
+    db.commit()
+    return {"message": "Event deleted"}
+
+
+
 @app.post("/organizer/create_event")
 def post_create_event(
     request: Request,
@@ -597,7 +778,6 @@ def post_create_event(
     """
     1) Create a new event in the database
     2) Append the event info to created_events.txt
-    3) Redirect to /profile/events
     """
     if organizer is None:
         response = RedirectResponse(url="/login", status_code=303)
@@ -635,6 +815,23 @@ def post_create_event(
         f.write("----------\n")
 
     return templates.TemplateResponse("create_event.html", {"request": request})
+
+
+@app.get("/organizer/{organizer_id}")
+def get_organizer_info(organizer_id: int, db: Session = Depends(get_user_session)):
+    
+    user = db.query(UserBase).filter(UserBase.uid == organizer_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Organizer not found")
+    return {
+        "profile_image_url": user.profile_image_url,
+        "name": user.username,
+        "email": user.email,
+        "bio": user.about,
+        "age": user.age,
+        "phone": user.phone,
+        "address": user.address
+    }
 
 @app.get("/organizer/delete_event")
 def org_del_event():

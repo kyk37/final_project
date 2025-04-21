@@ -5,6 +5,7 @@
   <link rel="stylesheet" href="/static/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+
   <title>Event Management Website</title>
 </head>
 
@@ -68,14 +69,32 @@
                       <div class="event-inner"> <!-- This is the flex wrapper -->
       
                         <div class="event-details">
-                          <span><b>Organizer:</b> {{ event.organizer }}</span><br>
+                          <span><b>Event Name:</b> {{ event_title[event.uid] }}</span><br>
+                        
+                          <b>Organizer:</b>
+                          <a href="#" class="organizer-link" data-organizer-id="{{ event.owner_uid }}">{{ event.organizer }}</a><br>
+                        
                           <span><b>Event Created:</b> {{ event.date.strftime('%Y-%m-%d') }}</span><br>
                           <span><b>Start Time:</b> {{ event.start_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
                           <span><b>End Time:</b> {{ event.end_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
                           <span><b>Location:</b> {{ event.location }}</span><br>
                           <span><b>Description:</b> {{ event.description }}</span><br>
-                        </div>
                         
+                          <a href="#" class="event-details-link" data-event-id="{{ event.uid }}">Event Details</a>
+                        
+                          <div><b>Tags:</b>
+                            {% if event.tags %}
+                              {% for tag in event.tags.split(',') %}
+                                <span class="tag">{{ tag.strip() }}</span>
+                              {% endfor %}
+                            {% else %}
+                              <em>No tags</em>
+                            {% endif %}
+                          </div>
+                        
+                          <p><b>Attendees:</b> {{ attendee_counts[event.uid] }}</p>
+                        </div>
+
                         <div class="scroll-join-button">
                           {% if username %}
                           {% set is_joined = event.uid in joined_event_ids %}
@@ -114,11 +133,7 @@
             </div>
   
 
-
-
           </div>
-
-
         </div>
       </div>
 
@@ -143,79 +158,143 @@
       </div>
     </div>
 
-    <script>
-      const toggleTheme = () => {
-        const body = document.body;
-        const isDark = body.getAttribute('data-theme') === 'dark';
-        body.setAttribute('data-theme', isDark ? 'light' : 'dark');
-      };
-    </script>
-  </div>
-
+  <!-- Event Modal-->
   <div id="eventModal" class="modal">
     <div class="modal-content">
-      <span class="close-button" onclick="closeModal()">&times;</span>
+      <span class="close" onclick="closeModal()">&times;</span>
       <div id="modalBody">
         <!-- Event details loaded here -->
       </div>
     </div>
   </div>
 
+  <!-- Organizer Detail Modal -->
+  <div id="organizer-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" id="close-organizer-modal">&times;</span>
+      <h3>Organizer Information</h3>
+      <div id="organizer-info">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Details Modal -->
+  <div id="event-details-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" id="close-event-details">&times;</span>
+      <h3 id="modal-event-title"></h3>
+      <p><strong>Type:</strong> <span id="modal-event-type"></span></p>
+      <p><strong>Tags:</strong> <span id="modal-event-tags"></span></p>
+      <p><strong>Organizer:</strong> <span id="modal-event-organizer"></span></p>
+      <p><strong>Time:</strong> <span id="modal-event-time"></span></p>
+      <p><strong>Location:</strong> <span id="modal-event-location"></span></p>
+      <p><strong>Description:</strong></p>
+      <p id="modal-event-description"></p>
+      <div id="modal-event-images" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>
+    </div>
+  </div>
+  </div>
+
+  <script> //Theme Script
+    const toggleTheme = () => {
+      const body = document.body;
+      const isDark = body.getAttribute('data-theme') === 'dark';
+      body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    };
+  </script>
+
   <script>
+    // Organizer page modal
+    document.querySelectorAll('.organizer-link').forEach(link => {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        const organizerId = this.getAttribute('data-organizer-id');
+    
+        fetch(`/organizer/${organizerId}`)
+          .then(response => response.json())
+          .then(data => {
+            const infoDiv = document.getElementById('organizer-info');
+            infoDiv.innerHTML = `
+              <div style="text-align: center;">
+                <img src="${data.profile_image_url || '/static/defaults/default_avatar.jpg'}"
+                    alt="Profile Picture"
+                    style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
+              </div>
+              <p><strong>Name:</strong> ${data.name}</p>
+              <p><strong>Age:</strong> ${data.age}</p>
+              <p><strong>Email:</strong> ${data.email}</p>
+              <p><strong>Bio:</strong> ${data.bio || "No bio available"}</p>
+              <p><strong>Phone:</strong> ${data.phone}</p>
+              <p><strong>Address:</strong> ${data.address}</p>
+            `;
+            document.getElementById('organizer-modal').style.display = 'block';
+          });
+      });
+    });
+    
+    document.getElementById('close-organizer-modal').addEventListener('click', () => {
+      document.getElementById('organizer-modal').style.display = 'none';
+    });
+  
+    document.getElementById('close-modal').addEventListener('click', () => {
+      document.getElementById('organizer-modal').style.display = 'none';
+    });
 
-      // if user clicked join event
-      function toggleJoin(eventId, button) {
-        const isJoined = button.getAttribute("data-joined") === "true";
-        const endpoint = isJoined ? `/api/unjoin_event/${eventId}` : `/api/join_event/${eventId}`;
-      
-        fetch(endpoint, {
-          method: "POST",
-        })
-        .then(response => {
-          if (response.ok) {
-            if (isJoined) {
-              button.innerText = "Join";
-              button.setAttribute("data-joined", "false");
-              button.classList.remove("joined");
-            } else {
-              button.innerText = "Joined!";
-              button.setAttribute("data-joined", "true");
-              button.classList.add("joined");
-            }
+
+    // if user clicked join event
+    function toggleJoin(eventId, button) {
+      const isJoined = button.getAttribute("data-joined") === "true";
+      const endpoint = isJoined ? `/api/unjoin_event/${eventId}` : `/api/join_event/${eventId}`;
+    
+      fetch(endpoint, {
+        method: "POST",
+      })
+      .then(response => {
+        if (response.ok) {
+          if (isJoined) {
+            button.innerText = "Join";
+            button.setAttribute("data-joined", "false");
+            button.classList.remove("joined");
           } else {
-            return response.json().then(data => alert("Error: " + data.detail));
+            button.innerText = "Joined!";
+            button.setAttribute("data-joined", "true");
+            button.classList.add("joined");
           }
-        })
-        .catch(error => {
-          console.error("Request failed:", error);
-          alert("Something went wrong.");
-        });
-      }
-      
-
-
-    // Events
-    function showEventDetails(eventId) {
-      fetch(`/api/event/${eventId}`)
-        .then(res => {
-          if (!res.ok) throw new Error("Event not found");
-          return res.json();
-        })
-        .then(data => {
-          const modalBody = document.getElementById("modalBody");
-          modalBody.innerHTML = `
-            <h2>${data.title}</h2>
-            <p><strong>Date:</strong> ${data.date}</p>
-            <p><strong>Time:</strong> ${data.start_time} – ${data.end_time}</p>
-            <p><strong>Location:</strong> ${data.location}</p>
-          `;
-          document.getElementById("eventModal").style.display = "block";
-        })
-        .catch(err => {
-          alert("Could not load event.");
-          console.error(err);
-        });
+          window.location.reload();
+        } else {
+          return response.json().then(data => alert("Error: " + data.detail));
+        }
+      })
+      .catch(error => {
+        console.error("Request failed:", error);
+        alert("Something went wrong.");
+      });
     }
+
+
+  // Events
+  function showEventDetails(eventId) {
+    fetch(`/api/event/${eventId}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Event not found");
+        return res.json();
+      })
+      .then(data => {
+        const modalBody = document.getElementById("modalBody");
+        modalBody.innerHTML = `
+          <h2>${data.title}</h2>
+          <p><strong>Date:</strong> ${data.date}</p>
+          <p><strong>Time:</strong> ${data.start_time} – ${data.end_time}</p>
+          <p><strong>Location:</strong> ${data.location}</p>
+        `;
+        document.getElementById("eventModal").style.display = "block";
+      })
+      .catch(err => {
+        alert("Could not load event.");
+        console.error(err);
+      });
+  }
   
     //Modal for calendar
     function closeModal() {
@@ -251,9 +330,10 @@
     });
   </script>
   
-  // Calendar
+
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <script>
+    // Calender
     document.addEventListener('DOMContentLoaded', function () {
       const calendarEl = document.getElementById('mini-calendar');
       const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -283,5 +363,80 @@
       calendar.render();
     });
   </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+  
+      // Delegate clicks on any element with class "event-details-link"
+      document.addEventListener("click", function(e) {
+        const detailLink = e.target.closest(".event-details-link");
+        if (!detailLink) return; // Not a click on an event detail link
+  
+        e.preventDefault();
+        const eventId = detailLink.getAttribute("data-event-id");
+        console.log("Fetching details for event:", eventId);
+  
+        // Fetch event data from the API
+        fetch(`/api/event/${eventId}`)
+          .then(resp => {
+            if (!resp.ok) {
+              throw new Error("Event not found");
+            }
+            return resp.json();
+          })
+          .then(data => {
+            // Populate modal content with event data
+            document.getElementById("modal-event-title").textContent = data.title;
+            document.getElementById("modal-event-type").textContent = data.event_type || "N/A";
+            document.getElementById("modal-event-tags").innerHTML = data.tags
+              ? data.tags.split(",").map(tag => `<span class="tag">${tag.trim()}</span>`).join(" ")
+              : "<em>No tags</em>";
+            document.getElementById("modal-event-organizer").textContent = data.organizer || "N/A";
+            document.getElementById("modal-event-time").textContent = `${data.start_time} – ${data.end_time}`;
+            document.getElementById("modal-event-location").textContent = data.location;
+            document.getElementById("modal-event-description").textContent = data.description;
+  
+            // Handle multiple image URLs (comma separated)
+            const imageContainer = document.getElementById("modal-event-images");
+            imageContainer.innerHTML = "";
+            if (data.image_urls) {
+              data.image_urls.split(',').map(url => url.trim()).forEach(url => {
+                const img = document.createElement("img");
+                img.src = url;
+                img.alt = "Event image";
+                img.style.maxHeight = "120px";
+                img.style.borderRadius = "8px";
+                imageContainer.appendChild(img);
+              });
+            }
+  
+            // Show the modal
+            document.getElementById("event-details-modal").style.display = "block";
+          })
+          .catch(err => {
+            console.error(err);
+            alert("Could not load event details.");
+          });
+      });
+  
+      // Close the modal when the close button is clicked
+      const closeBtn = document.getElementById("close-event-details");
+      if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+          document.getElementById("event-details-modal").style.display = "none";
+        });
+      }
+  
+      // Close the modal when clicking outside its content
+      window.addEventListener("click", function(e) {
+        const modal = document.getElementById("event-details-modal");
+        if (e.target === modal) {
+          modal.style.display = "none";
+        }
+      });
+    });
+  </script>
+  
+  
 </body>
 </html>

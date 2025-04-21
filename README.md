@@ -13,21 +13,21 @@
 ---> https?
 
 ## -- Basic Requirements --
-- [ ] Landing Page (with list of events, and event title, time, location, type)
-- [ ] Search function to find events using tags/keywords
-- [ ] Users can view eachother's details
+- [X] Landing Page (with list of events, and event title, time, location, type)
+- [X] Search function to find events using tags/keywords
+- [X] Users can view each event's details, title, type, tags, organizer, time, location, preview images, and description.
 - [X] Registration/login portal.
-- [ ] Registered users can sign up for future events, and view number of registeres users signed up
+- [X] Registered users can sign up for future events, and view number of registeres users signed up
 - [X] user profile page/settings. Show events with preview
-- [ ] Event Manager accounts (tied to specific event organizers) Can publish, edit, cancel events ~see item 6
-- [X] Event manager profile page shows events they are managing ~ see reqs for 7
-- [ ] All past events should be archived, no changes, and signups are allowed to past events
+- [] Event Manager accounts (tied to specific event organizers) Can publish, edit, cancel events ~see item 6
+- [X] Event manager profile page shows events they are managing. Can also view the detail page, edit event information, cancel event, and see a list of registered users that joined the event
+- [X] All past events should be archived, no changes and no signups are allowed to past events
 
 ## -- Tech Reqs --
-- [ ] User friendly web interface
-- [ ] should support many users
+- [X] User friendly web interface ~ish
+- [X] should support many users (We have like 8? could generate more)
 - [X] persistent storage (Do not store in plain text) (Hash/encryption) Mysql?
-- [ ] 75% code coverage for unit tests
+- [ ] 75% code coverage for unit tests (idk what this means ~Kyle)
 
 
 ## -- Advanced Requirements
@@ -37,8 +37,9 @@
 - [ ] event detail provides map information (Map apis), can download calendar event
 - [ ] allows registered users to subscribe to certain tags and organizers
 - [ ] event manager account allows batch creation from CSV imports and batch event cancelling
-- [ ] system to provide a filter function on all event lists using event type, time, locationetc.
+- [ ] system to provide a filter function on all event lists using event type, time, location etc.
 
 #### Writen By:
 - Kyle Kessler
 - Dan Hiss
+- Keyang Zheng
