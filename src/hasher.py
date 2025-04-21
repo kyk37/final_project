@@ -34,3 +34,12 @@ class Hasher:
         salt = bcrypt.gensalt(rounds=12)
         hashed = bcrypt.hashpw(password, salt)
         return hashed.decode('utf-8')  # decode before saving to DB
+
+# class Hasher:
+#     @staticmethod
+#     def get_password_hash(password):
+#         return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+#     @staticmethod
+#     def verify_password(plain_password, hashed_password):
+#         return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
