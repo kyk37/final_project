@@ -225,6 +225,9 @@ def unjoin_event(
     db: Session = Depends(get_event_session),
     current_user: UserBase = Depends(get_current_user)
 ):
+    '''
+        Leave Event
+    '''
     if current_user is None:
         raise HTTPException(status_code=401, detail="User must be logged in")
 
@@ -243,6 +246,63 @@ def unjoin_event(
     return {"message": "Successfully unjoined event"}
 
 
+
+# -----------------------------
+# Search Bar On home
+# -----------------------------
+
+@app.get("/search", response_class=HTMLResponse)
+def search_events(
+    request: Request,
+    search: Optional[str] = "",
+    db_event: Session = Depends(get_event_session),
+    current_user: Optional[UserBase] = Depends(get_current_user),
+    page: int = 1,
+    per_page: int = 20
+):
+    from datetime import timedelta
+    today = date.today()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+
+    events_this_week = []
+    joined_event_ids = set()
+
+    if current_user:
+        user_in_event_db = db_event.merge(current_user)
+        events_this_week = db_event.query(EventBase).filter(
+            EventBase.owner_uid == current_user.uid,
+            EventBase.date.between(start_of_week, end_of_week)
+        ).all()
+        joined_event_ids = {e.uid for e in user_in_event_db.events}
+
+    base_query = db_event.query(EventBase).filter(EventBase.archived == False)
+
+    if search:
+        base_query = base_query.filter(
+            EventBase.title.ilike(f"%{search}%") |
+            EventBase.description.ilike(f"%{search}%") |
+            EventBase.tags.ilike(f"%{search}%")
+        )
+
+    all_events = base_query.offset((page - 1) * per_page).limit(per_page).all()
+    attendee_counts = {event.uid: len(event.attendees) for event in all_events}
+    event_titles = {event.uid: (event.title) for event in all_events}
+    total_events = base_query.count()
+    total_pages = (total_events + per_page - 1) // per_page
+
+    return templates.TemplateResponse("home.html", {
+        "request": request,
+        "username": current_user.username if current_user else None,
+        "events_today": events_this_week,
+        "all_events": all_events,
+        "page": page,
+        "total_pages": total_pages,
+        "joined_event_ids": joined_event_ids,
+        "attendee_counts": attendee_counts,
+        "event_title": event_titles
+    })
+    
 # -----------------------------
 # LOGIN AND REGISTRATION
 # -----------------------------
@@ -545,29 +605,6 @@ def get_user_events(
     ]
     return JSONResponse(content=events_data)
 
-
-# -----------------------------
-# Search
-# -----------------------------
-
-@app.get("/search", response_class=HTMLResponse)
-def search_events(request: Request, search: Optional[str] = "", db: Session = Depends(get_event_session)):
-    today = date.today()
-    query = db.query(EventBase).filter(EventBase.date >= today)
-
-    if search:
-        query = query.filter(
-            EventBase.title.ilike(f"%{search}%") |
-            EventBase.description.ilike(f"%{search}%") |
-            EventBase.tags.ilike(f"%{search}%")
-        )
-
-    matched_events = query.all()
-    return templates.TemplateResponse("home.html", {
-        "request": request,
-        "events_today": matched_events,
-        "username": get_current_user(request, db),
-    })
 
 # -----------------------------
 # Database Creation/Deletion

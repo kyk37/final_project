@@ -75,9 +75,19 @@
                           <span><b>End Time:</b> {{ event.end_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
                           <span><b>Location:</b> {{ event.location }}</span><br>
                           <span><b>Description:</b> {{ event.description }}</span><br>
-                          <span><p>Attendees: {{ attendee_counts[event.uid] }}</p>
+                          <div><b>Tags:</b>
+                            {% if event.tags %}
+                                {% for tag in event.tags.split(',') %}
+                                  <span class="tag">{{ tag.strip() }}</span>
+                                {% endfor %}
+                            {% else %}
+                              <em>No tags</em>
+                            {% endif %}
+                          </div>
+                          </span>
+                          <span><p><b>Attendees:</b> {{ attendee_counts[event.uid] }}</p>
                         </div>
-                        
+                    
                         <div class="scroll-join-button">
                           {% if username %}
                           {% set is_joined = event.uid in joined_event_ids %}
