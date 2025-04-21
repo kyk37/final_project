@@ -21,7 +21,7 @@ from fastapi import Query
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from db.session import get_user_session, get_event_session
-
+from fastapi import Body
 
 from src.usr_model import User as UserBase
 from src.event_model import Events as EventBase
@@ -32,7 +32,7 @@ from src.startup import create_startup_users, create_events
 
 from calendar_router import calendar_router
 
-from datetime import date
+from datetime import datetime, timedelta, date
 
 from db.base import Base
 
@@ -421,25 +421,47 @@ def prof_password(request: Request, current_user: Optional[UserBase] = Depends(g
 def get_joined_events(
     request: Request,
     db_event: Session = Depends(get_event_session),
-    current_user: UserBase = Depends(get_current_user)
+    current_user: UserBase = Depends(get_current_user),
+    page: int = 1,
+    per_page: int = 20
 ):
     if current_user is None:
         response = RedirectResponse(url="/login", status_code=303)
         response.set_cookie("message", "Please log in to access this page", max_age=5)
         return response
-    
-    user_in_event_db = db_event.merge(current_user)
-    user_events = db_event.query(EventBase).filter(EventBase.attendees.contains(user_in_event_db)).all()
-    joined_event_ids = {e.uid for e in user_in_event_db.events}
 
+    user = db_event.query(UserBase).filter(UserBase.uid == current_user.uid).first()
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    all_events = user.events  # this pulls joined events from relationship
+    total_events = len(all_events)
+    paginated = all_events[(page - 1) * per_page: page * per_page]
+
+    joined_event_ids = {e.uid for e in all_events}
+    attendee_counts = {event.uid: len(event.attendees) for event in paginated}
+    event_titles = {event.uid: event.title for event in paginated}
+    attendee_names = {
+        event.uid: [f"{u.first_name} {u.last_name}" for u in event.attendees]
+        for event in paginated
+    }
+
+    total_pages = (total_events + per_page - 1) // per_page
 
     return templates.TemplateResponse("profile_events.html", {
         "request": request,
-        "user_events": user_events,
-        "is_organizer": current_user.is_organizer,
-        'username': current_user.username if current_user else None,
-        "joined_event_ids": joined_event_ids
+        "username": current_user.username,
+        "user_events": paginated,
+        "page": page,
+        "total_pages": total_pages,
+        "joined_event_ids": joined_event_ids,
+        "attendee_counts": attendee_counts,
+        "attendee_names": attendee_names,
+        "event_title": event_titles,
+        "user_id": current_user.uid,
+        "is_organizer": current_user.is_organizer
     })
+
 
 
 @app.get("/event/{event_id}", response_class=HTMLResponse)
@@ -596,23 +618,12 @@ def get_user_calendar_events(
     return JSONResponse(content=events, media_type="application/json")
 
 
-
-
-# @app.get("/api/user-events")
-# def user_events(
-#     current_user: UserBase = Depends(get_current_user),
-#     db: Session = Depends(get_event_session)
-# ):
-#     if not current_user:
-#         raise HTTPException(status_code=401, detail="Login required")
-#     return db.query(EventBase).filter(EventBase.attendees.any(UserBase.uid == current_user.uid)).all()
-
-# Testing this is commented
 @app.get("/api/user-events")
 def get_user_events(
     db: Session = Depends(get_event_session),
     current_user: UserBase = Depends(get_current_user)
 ):
+    ''' Events in the user profile pages'''
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
@@ -626,7 +637,7 @@ def get_user_events(
 
     events_data = [
         {
-            "title": event.title,
+            "event_title": event.title,
             "start": event.start_time.isoformat(),
             "end": event.end_time.isoformat(),
             "description": event.description,
@@ -661,6 +672,56 @@ def get_create_event(request: Request, current_user: Optional[UserBase] = Depend
     
     return templates.TemplateResponse("create_event.html", {"request": request, "username": current_user.username, "is_organizer": current_user.is_organizer})
 
+    
+from fastapi import HTTPException
+
+...
+
+@app.put("/api/edit_event/{event_id}")
+def edit_event(event_id: int, data: dict, db: Session = Depends(get_event_session), current_user: UserBase = Depends(get_current_user)):
+    event = db.get(EventBase, event_id)
+
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    if event.owner_uid != current_user.uid:
+        raise HTTPException(status_code=403, detail="You are not authorized to edit this event")
+
+    if event.owner_uid and event.owner_uid not in [u.uid for u in event.attendees]:
+        organizer = db.query(UserBase).filter(UserBase.uid == event.owner_uid).first()
+        if organizer:
+            event.attendees.append(organizer)
+
+    event.title = data.get("title", event.title)
+    event.location = data.get("location", event.location)
+    event.tags = data.get("tags", event.tags)
+    event.description = data.get("description", event.description)
+    event.event_type = data.get("event_type", event.event_type)
+    event.image_urls = data.get("image_urls", event.image_urls)
+
+    try:
+        if data.get("start_time"):
+            event.start_time = datetime.fromisoformat(data["start_time"])
+        if data.get("end_time"):
+            event.end_time = datetime.fromisoformat(data["end_time"])
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Please use ISO 8601 format.")
+
+    db.commit()
+    return {"message": "Event updated successfully"}
+    
+
+@app.delete("/api/delete_event/{event_id}")
+def delete_event(event_id: int, db: Session = Depends(get_event_session), current_user: Optional[UserBase] = Depends(get_current_user)):
+    event = db.query(EventBase).filter(EventBase.uid == event_id, EventBase.owner_uid == current_user.uid).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found or unauthorized")
+    db.delete(event)
+    db.commit()
+    return {"message": "Event deleted"}
+
+
+
 @app.post("/organizer/create_event")
 def post_create_event(
     request: Request,
@@ -679,7 +740,6 @@ def post_create_event(
     """
     1) Create a new event in the database
     2) Append the event info to created_events.txt
-    3) Redirect to /profile/events
     """
     if organizer is None:
         response = RedirectResponse(url="/login", status_code=303)

@@ -45,45 +45,78 @@
           <h2 style="text-align:center;">Events Your Attending</h2>
           <div class="search-box">
             
-            <div class="scrollable-event-list">
-              {% if user_events %}
-                {% for event in user_events %}
-                  <div class="event-card">
-                    <div class="event-inner"> <!-- This is the flex wrapper -->
-    
-                      <div class="event-details">
-                        <span><b>Organizer:</b> {{ event.organizer }}</span><br>
-                        <span><b>Event Created:</b> {{ event.date.strftime('%Y-%m-%d') }}</span><br>
-                        <span><b>Start Time:</b> {{ event.start_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
-                        <span><b>End Time:</b> {{ event.end_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
-                        <span><b>Location:</b> {{ event.location }}</span><br>
-                        <span><b>Description:</b> {{ event.description }}</span><br>
-                        <span><b>Tags:</b> {{ event.tags }}</span>
+              <div class="scrollable-event-list-home">
+                {% if user_events %}
+                  {% for event in user_events %}
+                    <div class="event-card">
+                      <div class="event-inner"> <!-- This is the flex wrapper -->
+      
+                        <div class="event-details">
+                          <span><b>Event Name:</b> {{ event.title }}</span><br>
+                        
+                          <b>Organizer:</b>
+                          <a href="#" class="organizer-link" data-organizer-id="{{ event.owner_uid }}">{{ event.organizer }}</a><br>
+                        
+                          <span><b>Event Created:</b> {{ event.date.strftime('%Y-%m-%d') }}</span><br>
+                          <span><b>Start Time:</b> {{ event.start_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
+                          <span><b>End Time:</b> {{ event.end_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
+                          <span><b>Location:</b> {{ event.location }}</span><br>
+                          <span><b>Description:</b> {{ event.description }}</span><br>
+                        
+                          <a href="#" class="event-details-link" data-event-id="{{ event.uid }}">Event Details</a>
+                        
+                          <div><b>Tags:</b>
+                            {% if event.tags %}
+                              {% for tag in event.tags.split(',') %}
+                                <span class="tag">{{ tag.strip() }}</span>
+                              {% endfor %}
+                            {% else %}
+                              <em>No tags</em>
+                            {% endif %}
+                          </div>
+                        
+                          <p>
+                              <b>Attendees:</b> 
+                              <a href="javascript:void(0);" onclick="toggleAttendees('{{ event.uid }}')">
+                                {{ attendee_counts.get(event.uid, 0) }}
+                              </a>
+                            </p>
+                            <ul id="attendee-list-{{ event.uid }}" style="display: none; margin-top: 5px;">
+                              {% for name in attendee_names[event.uid] %}
+                                <li>{{ name }}</li>
+                              {% endfor %}
+                            </ul>
+                          
+                        </div>
+
+                        <div class="scroll-join-button">
+                          {% if is_organizer and event.owner_uid == user_id %}
+                          <div class="scroll-join-button">
+                            <button class="edit-btn" onclick="openEditModal({{ event.uid }})">Edit Event</button>
+                            <button class="cancel-btn" onclick="cancelEvent({{ event.uid }})">Cancel Event</button>
+                          </div>
+                        {% else %}
+                        
+                          <div class="scroll-join-button">
+                            {% if event.uid in joined_event_ids %}
+                              <button class="join-btn" onclick="toggleJoin({{ event.uid }}, this)" data-joined="true">Joined!</button>
+                            {% else %}
+                              <button class="join-btn" onclick="toggleJoin({{ event.uid }}, this)" data-joined="false">Join</button>
+                            {% endif %}
+                          </div>
+                        {% endif %}
+                        
+                        </div>
+      
                       </div>
-    
-                      <div class="scroll-join-button">
-                        {% if username %}
-                        {% set is_joined = event.uid in joined_event_ids %}
-                        <button
-                          class="join-btn"
-                          onclick="toggleJoin({{ event.uid }}, this)"
-                          data-joined="{{ 'true' if is_joined else 'false' }}"
-                        >
-                          {{ 'Joined!' if is_joined else 'Join' }}
-                        </button>
-                      {% else %}
-                        <small style="color: gray;">Login to join</small>
-                      {% endif %}
-                      </div>
-    
+                      
                     </div>
-                  </div>
-                {% endfor %}
-              {% else %}
-                <p style="color: var(--text-300); font-style: italic;">No events available.</p>
-              {% endif %}
+                  {% endfor %}
+                {% else %}
+                  <p style="color: var(--text-300); font-style: italic;">No events available.</p>
+                {% endif %}
+              </div>
             </div>
-          </div>
 
           <div class="refresh-container">
             <button class="join-btn refresh-btn" onclick="refresh()">Refresh List</button>
@@ -96,17 +129,94 @@
 
 
 
-    <div class="footer">
-      <div class="botnav">
-        <a class="active" href="#home">Home</a>
-        <a href="#About">About</a>
-        <a href="#pPolicy">Privacy Policy</a>
-        <a href="#Contact">Contact Us</a>
-        <a>© copyright Does not Exist </a>
+  <div class="footer">
+    <div class="botnav">
+      <a class="active" href="#home">Home</a>
+      <a href="#About">About</a>
+      <a href="#pPolicy">Privacy Policy</a>
+      <a href="#Contact">Contact Us</a>
+      <a>© copyright Does not Exist </a>
+    </div>
+  </div>
+
+  <script>
+    function cancelEvent(eventId) {
+      if (!confirm("Are you sure you want to cancel this event?")) return;
+  
+      fetch(`/api/delete_event/${eventId}`, {
+        method: "DELETE"
+      })
+      .then(response => {
+        if (response.ok) {
+          alert("Event canceled successfully.");
+          window.location.reload();
+        } else {
+          return response.json().then(data => {
+            throw new Error(data.detail || "Failed to cancel event");
+          });
+        }
+      })
+      .catch(err => {
+        console.error("Cancel error:", err);
+        alert("Error canceling event.");
+      });
+    }
+  </script>
+  
+
+  <!-- Edit Event Modal -->
+  <div id="editEventModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeEditModal()">&times;</span>
+      <h3>Edit Event</h3>
+      <form onsubmit="saveEventChanges(); return false;">
+        <input type="hidden" name="uid" id="edit-event-id">
+        <input type="text" name="title" placeholder="Title" id="edit-title">
+        <input type="text" name="location" placeholder="Location" id="edit-location">
+        <input type="text" name="tags" placeholder="Tags (comma-separated)" id="edit-tags">
+        
+        <textarea name="description" placeholder="Description" id="edit-description"></textarea>
+
+        <input type="datetime-local" name="start_time" id="edit-start-time">
+        <input type="datetime-local" name="end_time" id="edit-end-time">
+        <input type="text" name="event_type" placeholder="Event Type" id="edit-type">
+        <input type="text" name="image_urls" placeholder="Image URLs (comma-separated)" id="edit-images">
+        <button type="button" onclick="saveEventChanges()">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Organizer Detail Modal -->
+  <div id="organizer-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" id="close-organizer-modal">&times;</span>
+      <h3>Organizer Information</h3>
+      <div id="organizer-info">
+        <!-- Populated dynamically -->
       </div>
     </div>
+  </div>
 
-  
+  <!-- Event Details Modal -->
+  <div id="event-details-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" id="close-event-details">&times;</span>
+      <h3 id="modal-event-title"></h3>
+      <p><strong>Type:</strong> <span id="modal-event-type"></span></p>
+      <p><strong>Tags:</strong> <span id="modal-event-tags"></span></p>
+      <p><strong>Organizer:</strong> <span id="modal-event-organizer"></span></p>
+      <p><strong>Time:</strong> <span id="modal-event-time"></span></p>
+      <p><strong>Location:</strong> <span id="modal-event-location"></span></p>
+      <p><strong>Description:</strong></p>
+      <p id="modal-event-description"></p>
+      <div id="modal-event-images" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>
+    </div>
+  </div>
+  </div>
+
+
+
+
     <script>
       // Theme
       const toggleTheme = () => {
@@ -149,7 +259,6 @@
       });
     }
 
-
       // logout button
       function logout() {
         fetch("/logout", {
@@ -161,8 +270,172 @@
           console.error(err);
         });
       }
-            
     </script>
+
+    <script>
+      function toggleAttendees(eventId) {
+        const list = document.getElementById(`attendee-list-${eventId}`);
+        if (list.style.display === "none") {
+          list.style.display = "block";
+        } else {
+          list.style.display = "none";
+        }
+      }
+    </script>
+
+
+    <script>
+      function saveEventChanges() {
+        const eventId = document.getElementById("edit-event-id").value;
+        const payload = {
+          title: document.getElementById("edit-title").value,
+          location: document.getElementById("edit-location").value,
+          tags: document.getElementById("edit-tags").value,
+          description: document.getElementById("edit-description").value,
+          event_type: document.getElementById("edit-type").value,
+          image_urls: document.getElementById("edit-images").value,
+          start_time: document.getElementById("edit-start-time").value,
+          end_time: document.getElementById("edit-end-time").value,
+        };
+      
+        fetch(`/api/edit_event/${eventId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        })
+        .then(async (response) => {
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error:", errorText);
+            alert("Error updating event.");
+          } else {
+            alert("Event updated!");
+            location.reload();
+          }
+        })
+        .catch(error => {
+          console.error("Request failed:", error);
+          alert("Could not save changes.");
+        });
+      }
+      </script>
+      
+
+      <script>
+      function openEditModal(eventId) {
+        fetch(`/api/event/${eventId}`)
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById("edit-event-id").value = eventId;
+            document.getElementById("edit-title").value = data.title;
+            document.getElementById("edit-location").value = data.location;
+            document.getElementById("edit-tags").value = data.tags;
+            document.getElementById("edit-description").value = data.description;
+            document.getElementById("edit-type").value = data.event_type;
+            document.getElementById("edit-images").value = data.image_urls;
+            document.getElementById("edit-start-time").value = data.start_time;
+            document.getElementById("edit-end-time").value = data.end_time;
+      
+            document.getElementById("editEventModal").style.display = "block";
+          });
+      }
+      
+      function closeEditModal() {
+        document.getElementById("editEventModal").style.display = "none";
+      }
+
+    </script>
+
+    <script>
+      // Organizer page modal
+      document.querySelectorAll('.organizer-link').forEach(link => {
+        link.addEventListener('click', function (e) {
+          e.preventDefault();
+          const organizerId = this.getAttribute('data-organizer-id');
+    
+          fetch(`/organizer/${organizerId}`)
+            .then(response => response.json())
+            .then(data => {
+              const infoDiv = document.getElementById('organizer-info');
+              infoDiv.innerHTML = `
+                <div style="text-align: center;">
+                  <img src="${data.profile_image_url || '/static/defaults/default_avatar.jpg'}"
+                      alt="Profile Picture"
+                      style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
+                </div>
+                <p><strong>Name:</strong> ${data.name}</p>
+                <p><strong>Age:</strong> ${data.age}</p>
+                <p><strong>Email:</strong> ${data.email}</p>
+                <p><strong>Bio:</strong> ${data.bio || "No bio available"}</p>
+                <p><strong>Phone:</strong> ${data.phone}</p>
+                <p><strong>Address:</strong> ${data.address}</p>
+              `;
+              document.getElementById('organizer-modal').style.display = 'block';
+            });
+        });
+      });
+    
+      document.getElementById('close-organizer-modal').addEventListener('click', () => {
+        document.getElementById('organizer-modal').style.display = 'none';
+      });
+    
+      // Event details modal
+      document.querySelectorAll('.event-details-link').forEach(link => {
+        link.addEventListener('click', function (e) {
+          e.preventDefault();
+          const eventId = this.getAttribute('data-event-id');
+    
+          fetch(`/api/event/${eventId}`)
+            .then(resp => resp.json())
+            .then(data => {
+              document.getElementById("modal-event-title").textContent = data.title;
+              document.getElementById("modal-event-type").textContent = data.event_type || "N/A";
+              document.getElementById("modal-event-tags").innerHTML = data.tags
+                ? data.tags.split(",").map(tag => `<span class="tag">${tag.trim()}</span>`).join(" ")
+                : "<em>No tags</em>";
+              document.getElementById("modal-event-organizer").textContent = data.organizer || "N/A";
+              document.getElementById("modal-event-time").textContent = `${data.start_time} – ${data.end_time}`;
+              document.getElementById("modal-event-location").textContent = data.location;
+              document.getElementById("modal-event-description").textContent = data.description;
+    
+              const imageContainer = document.getElementById("modal-event-images");
+              imageContainer.innerHTML = "";
+              if (data.image_urls) {
+                data.image_urls.split(',').forEach(url => {
+                  const img = document.createElement("img");
+                  img.src = url.trim();
+                  img.style.maxHeight = "120px";
+                  img.style.borderRadius = "8px";
+                  imageContainer.appendChild(img);
+                });
+              }
+    
+              document.getElementById("event-details-modal").style.display = "block";
+            });
+        });
+      });
+    
+      document.getElementById("close-event-details").addEventListener("click", () => {
+        document.getElementById("event-details-modal").style.display = "none";
+      });
+    
+      // Close when clicking outside modal
+      window.addEventListener("click", function(e) {
+        const eventModal = document.getElementById("event-details-modal");
+        const orgModal = document.getElementById("organizer-modal");
+        if (e.target === eventModal) {
+          eventModal.style.display = "none";
+        }
+        if (e.target === orgModal) {
+          orgModal.style.display = "none";
+        }
+      });
+    </script>
+    
+
+
 </div>
 </body>
 

@@ -156,6 +156,7 @@ def create_events(event_db: Session, organizer_map: dict[str, int]):
             print(f"Skipping event: Organizer UID {organizer_uid} not found in DB.")
             continue
 
+
         event = Events(
             owner_uid=organizer_user.uid,
             title=title,
@@ -171,7 +172,16 @@ def create_events(event_db: Session, organizer_map: dict[str, int]):
             archived=start_time.date() < now.date()
         )
 
-        event.attendees.append(organizer_user)
-        event_db.add(event)
 
+        if organizer_user not in event.attendees:
+            event.attendees.append(organizer_user)
+            
+        event_db.add(event)
         event_db.commit()
+        
+    for event in event_db.query(Events).all():
+        if event.owner_uid not in [user.uid for user in event.attendees]:
+            owner = event_db.get(User, event.owner_uid)
+            event.attendees.append(owner)
+            print(f"Fixed missing organizer for event '{event.title}'")
+    event_db.commit()
