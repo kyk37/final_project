@@ -88,7 +88,8 @@ def create_startup_users(db: Session):
             created_at=datetime.now(),
             is_organizer=True,
             admin=False,
-            profile_image_url="/static/defaults/default_avatar.jpg"
+            profile_image_url="/static/defaults/default_avatar.jpg",
+            about=f"This is a page about the {org_name}"
         )
         db.add(organizer)
         db.commit()

@@ -68,12 +68,14 @@
                       <div class="event-inner"> <!-- This is the flex wrapper -->
       
                         <div class="event-details">
-                          <span><b>Organizer:</b> {{ event.organizer }}</span><br>
+                          <span><b>Event Name:</b> {{ event_title[event.uid] }}</span><br>
+                          <a href="#" class="organizer-link" data-organizer-id="{{ event.owner_uid }}">{{ event.organizer }}</a>
                           <span><b>Event Created:</b> {{ event.date.strftime('%Y-%m-%d') }}</span><br>
                           <span><b>Start Time:</b> {{ event.start_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
                           <span><b>End Time:</b> {{ event.end_time.strftime('%B %d, %Y – %I:%M %p') }}</span><br>
                           <span><b>Location:</b> {{ event.location }}</span><br>
                           <span><b>Description:</b> {{ event.description }}</span><br>
+                          <span><p>Attendees: {{ attendee_counts[event.uid] }}</p>
                         </div>
                         
                         <div class="scroll-join-button">
@@ -152,6 +154,7 @@
     </script>
   </div>
 
+  <!-- Event Modal-->
   <div id="eventModal" class="modal">
     <div class="modal-content">
       <span class="close-button" onclick="closeModal()">&times;</span>
@@ -161,7 +164,45 @@
     </div>
   </div>
 
+  <div id="organizer-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" id="close-organizer-modal">&times;</span>
+      <h3>Organizer Information</h3>
+      <div id="organizer-info">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
   <script>
+    // Organizer page modal
+    document.querySelectorAll('.organizer-link').forEach(link => {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        const organizerId = this.getAttribute('data-organizer-id');
+    
+        fetch(`/organizer/${organizerId}`)
+          .then(response => response.json())
+          .then(data => {
+            const infoDiv = document.getElementById('organizer-info');
+            infoDiv.innerHTML = `
+              <p><strong>Name:</strong> ${data.name}</p>
+              <p><strong>Email:</strong> ${data.email}</p>
+              <p><strong>Bio:</strong> ${data.bio || "No bio available"}</p>
+            `;
+            document.getElementById('organizer-modal').style.display = 'block';
+          });
+      });
+    });
+    
+    document.getElementById('close-organizer-modal').addEventListener('click', () => {
+      document.getElementById('organizer-modal').style.display = 'none';
+    });
+  
+    document.getElementById('close-modal').addEventListener('click', () => {
+      document.getElementById('organizer-modal').style.display = 'none';
+    });
+
 
       // if user clicked join event
       function toggleJoin(eventId, button) {

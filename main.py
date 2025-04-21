@@ -123,7 +123,6 @@ def main(
     '''
     from datetime import timedelta
 
-
     today = date.today()
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=6)
@@ -142,7 +141,9 @@ def main(
     # Search all Events that are NOT archived
     query = db_event.query(EventBase).filter(EventBase.archived == False)
     all_events = query.offset((page - 1) * per_page).limit(per_page).all()
-
+    attendee_counts = {event.uid: len(event.attendees) for event in all_events}
+    event_titles = {event.uid: (event.title) for event in all_events}
+    
     total_events = query.count()
     total_pages = (total_events + per_page - 1) // per_page
 
@@ -153,9 +154,22 @@ def main(
         'all_events': all_events,
         'page': page,
         'total_pages': total_pages,
-        'joined_event_ids': joined_event_ids
+        'joined_event_ids': joined_event_ids,
+        'attendee_counts': attendee_counts,
+        'event_title': event_titles
     })
 
+@app.get("/organizer/{organizer_id}")
+def get_organizer_info(organizer_id: int, db: Session = Depends(get_user_session)):
+    
+    user = db.query(UserBase).filter(UserBase.uid == organizer_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Organizer not found")
+    return {
+        "name": user.username,
+        "email": user.email,
+        "bio": user.about
+    }
 
 @app.get("/api/event/{event_id}")
 def get_event_summary(
