@@ -416,6 +416,42 @@ def prof_password(request: Request, current_user: Optional[UserBase] = Depends(g
     
     return templates.TemplateResponse("profile_password.html", {"request": request, "is_organizer": current_user.is_organizer})
 
+@app.post("/profile/update_password")
+def update_password(
+    request: Request,
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...),
+    db: Session = Depends(get_user_session),
+    current_user: Optional[UserBase] = Depends(get_current_user)
+):
+    if current_user is None:
+        response = RedirectResponse(url="/login", status_code=303)
+        response.set_cookie("message", "Please log in to update your password", max_age=5)
+        return response
+
+    if not Hasher.verify_password(current_password, current_user.password_hashed):
+        return templates.TemplateResponse("profile_password.html", {
+            "request": request,
+            "error": "Current password is incorrect",
+            "is_organizer": current_user.is_organizer
+        }, status_code=400)
+
+    if new_password != confirm_password:
+        return templates.TemplateResponse("profile_password.html", {
+            "request": request,
+            "error": "New passwords do not match",
+            "is_organizer": current_user.is_organizer
+        }, status_code=400)
+
+    current_user.password_hashed = Hasher.get_password_hash(new_password)
+    db.commit()
+
+    response = RedirectResponse(url="/profile/home", status_code=303)
+    response.set_cookie("update_message", "Password updated successfully", max_age=5)
+    return response
+
+
 
 @app.get("/profile/events")
 def get_joined_events(
@@ -624,7 +660,7 @@ def get_user_events(
 
     events_data = [
         {
-            "event_title": event.title,
+            "title": event.title,
             "start": event.start_time.isoformat(),
             "end": event.end_time.isoformat(),
             "description": event.description,
