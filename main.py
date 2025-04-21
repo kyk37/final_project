@@ -1,6 +1,6 @@
 import os
 from pydantic import BaseModel
-from typing import Annotated, Optional
+from typing import Annotated, Optional, List
 from contextlib import asynccontextmanager
 from jose import JWTError, jwt
 
@@ -143,6 +143,7 @@ def main(
     all_events = query.offset((page - 1) * per_page).limit(per_page).all()
     attendee_counts = {event.uid: len(event.attendees) for event in all_events}
     event_titles = {event.uid: (event.title) for event in all_events}
+    event_descriptions = {event.uid: event.description for event in all_events}
     
     total_events = query.count()
     total_pages = (total_events + per_page - 1) // per_page
@@ -156,7 +157,8 @@ def main(
         'total_pages': total_pages,
         'joined_event_ids': joined_event_ids,
         'attendee_counts': attendee_counts,
-        'event_title': event_titles
+        'event_title': event_titles,
+        'description': event_descriptions
     })
 
 
@@ -164,7 +166,7 @@ def main(
 def get_event_summary(
     event_id: int,
     db: Session = Depends(get_event_session),
-    current_user: UserBase = Depends(get_current_user)
+    current_user: Optional[UserBase] = Depends(get_current_user)
 ):
     event = db.query(EventBase).filter(EventBase.uid == event_id).first()
     if event is None:
@@ -416,6 +418,42 @@ def prof_password(request: Request, current_user: Optional[UserBase] = Depends(g
     
     return templates.TemplateResponse("profile_password.html", {"request": request, "is_organizer": current_user.is_organizer})
 
+@app.post("/profile/update_password")
+def update_password(
+    request: Request,
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...),
+    db: Session = Depends(get_user_session),
+    current_user: Optional[UserBase] = Depends(get_current_user)
+):
+    if current_user is None:
+        response = RedirectResponse(url="/login", status_code=303)
+        response.set_cookie("message", "Please log in to update your password", max_age=5)
+        return response
+
+    if not Hasher.verify_password(current_password, current_user.password_hashed):
+        return templates.TemplateResponse("profile_password.html", {
+            "request": request,
+            "error": "Current password is incorrect",
+            "is_organizer": current_user.is_organizer
+        }, status_code=400)
+
+    if new_password != confirm_password:
+        return templates.TemplateResponse("profile_password.html", {
+            "request": request,
+            "error": "New passwords do not match",
+            "is_organizer": current_user.is_organizer
+        }, status_code=400)
+
+    current_user.password_hashed = Hasher.get_password_hash(new_password)
+    db.commit()
+
+    response = RedirectResponse(url="/profile/home", status_code=303)
+    response.set_cookie("update_message", "Password updated successfully", max_age=5)
+    return response
+
+
 
 @app.get("/profile/events")
 def get_joined_events(
@@ -500,8 +538,9 @@ def update_profile_settings(
     about: Optional[str] = Form(None),
     age: Optional[str] = Form(...),
     address: Optional[str] = Form(None),
-        phone: str = Form(..., pattern=r"^\d{10,15}$"),
-    
+    phone: str = Form(..., pattern=r"^\d{10,15}$"),
+    first_name: Optional[str] = Form(None),
+    last_name: Optional[str] = Form(None),
     db: Session = Depends(get_user_session),
     current_user: Optional[UserBase] = Depends(get_current_user)
 ):
@@ -521,6 +560,12 @@ def update_profile_settings(
             "username": username,
             "email": email,
         }, status_code=400)
+        
+    if first_name:
+        current_user.first_name = first_name
+
+    if last_name:
+        current_user.last_name = last_name
         
     if username:
         current_user.username = username
@@ -617,7 +662,7 @@ def get_user_events(
 
     events_data = [
         {
-            "event_title": event.title,
+            "title": event.title,
             "start": event.start_time.isoformat(),
             "end": event.end_time.isoformat(),
             "description": event.description,
@@ -645,9 +690,9 @@ def post_create_event(
     location: str = Form(...),
     event_type: str = Form(...),
     event_tags: str = Form(None),
-    event_img_urls: str = Form(None)
+    event_img_urls: Optional[List[UploadFile]] = File(None),
 ):
-    ''' Create Events!'''
+    ''' Create Events! '''
     if organizer is None or not organizer.is_organizer:
         response = RedirectResponse(url="/login", status_code=303)
         response.set_cookie("message", "Please log in as an organizer", max_age=5)
@@ -661,8 +706,20 @@ def post_create_event(
         end_dt = datetime.combine(parsed_date, parsed_end_time)
 
         is_archived = end_dt < datetime.now()
-
         full_organizer_name = f"{organizer.first_name} {organizer.last_name}"
+
+        image_paths = []
+        if event_img_urls:
+            os.makedirs("static/uploads", exist_ok=True)
+            for img in event_img_urls:
+                if img and img.filename:
+                    ext = os.path.splitext(img.filename)[-1]
+                    filename = f"event_{organizer.uid}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{img.filename}"
+                    save_path = f"static/uploads/{filename}"
+                    with open(save_path, "wb") as f:
+                        f.write(img.file.read())
+                    image_paths.append(f"/static/uploads/{filename}")
+
 
         new_event = EventBase(
             owner_uid=organizer.uid,
@@ -674,18 +731,17 @@ def post_create_event(
             event_type=event_type,
             organizer=full_organizer_name,
             tags=event_tags,
-            image_urls=event_img_urls,
+            image_urls=",".join(image_paths),
             description=description,
             archived=is_archived
         )
-        
-        organizer_in_db = db.merge(organizer) 
+
+        organizer_in_db = db.merge(organizer)
         new_event.attendees.append(organizer_in_db)
-        
+
         db.add(new_event)
         db.commit()
         db.refresh(new_event)
-
 
         return templates.TemplateResponse("create_event.html", {
             "request": request,
@@ -706,8 +762,7 @@ def post_create_event(
             "error": "An unexpected error occurred while creating the event."
         })
 
-    
-    
+
 @app.get("/organizer/create_event", response_class=HTMLResponse)
 def get_create_event(
     request: Request,
@@ -759,6 +814,8 @@ def edit_event(event_id: int, data: dict, db: Session = Depends(get_event_sessio
 
     db.commit()
     return {"message": "Event updated successfully"}
+    
+    
     
 
 @app.delete("/api/delete_event/{event_id}")

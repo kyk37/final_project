@@ -444,6 +444,46 @@ button.cancel-btn{
   border-radius: 10px;
 }
 
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1em;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-grid label {
+  font-weight: bold;
+  color: var(--text);
+}
+
+.form-grid input,
+.form-grid textarea {
+  padding: 12px;
+  border-radius: 6px;
+  background-color: var(--background-700);
+  color: var(--text);
+  border: 1px solid var(--background-600);
+}
+
+.form-grid input::placeholder,
+.form-grid textarea::placeholder {
+  color: var(--text-300);
+}
+
+.success-message {
+  color: limegreen;
+  text-align: center;
+  font-weight: bold;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+  font-weight: bold;
+}
+
 #modal-event-images img {
   max-height: 120px;
   border-radius: 8px;
