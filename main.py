@@ -500,8 +500,9 @@ def update_profile_settings(
     about: Optional[str] = Form(None),
     age: Optional[str] = Form(...),
     address: Optional[str] = Form(None),
-        phone: str = Form(..., pattern=r"^\d{10,15}$"),
-    
+    phone: str = Form(..., pattern=r"^\d{10,15}$"),
+    first_name: Optional[str] = Form(None),
+    last_name: Optional[str] = Form(None),
     db: Session = Depends(get_user_session),
     current_user: Optional[UserBase] = Depends(get_current_user)
 ):
@@ -521,6 +522,12 @@ def update_profile_settings(
             "username": username,
             "email": email,
         }, status_code=400)
+        
+    if first_name:
+        current_user.first_name = first_name
+
+    if last_name:
+        current_user.last_name = last_name
         
     if username:
         current_user.username = username
