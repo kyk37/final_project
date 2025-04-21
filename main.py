@@ -632,25 +632,75 @@ def get_user_events(
 # Database Creation/Deletion
 # -----------------------------
 
-@app.get("/organizer/create_event", response_class=HTMLResponse)
-def get_create_event(request: Request, current_user: Optional[UserBase] = Depends(get_current_user)):
-    if current_user is None:
+@app.post("/organizer/create_event", response_class=HTMLResponse)
+def post_create_event(
+    request: Request,
+    db: Session = Depends(get_event_session),
+    organizer: Optional[UserBase] = Depends(get_current_user),
+    title: str = Form(...),
+    description: str = Form(None),
+    event_date: str = Form(...),
+    event_start_time: str = Form(...),
+    event_end_time: str = Form(...),
+    location: str = Form(...),
+    event_type: str = Form(...),
+    event_tags: str = Form(None),
+    event_img_urls: str = Form(None)
+):
+    if organizer is None or not organizer.is_organizer:
         response = RedirectResponse(url="/login", status_code=303)
-        response.set_cookie("message", "Please log in to access this page", max_age = 5)
+        response.set_cookie("message", "Please log in as an organizer", max_age=5)
         return response
 
-    # optionally check if user is an organizer
-    if not current_user.is_organizer:
-        response = RedirectResponse(url="/profile/home", status_code=302)
-        response.set_cookie(
-            key="not_organizer_alert",
-            value="You need to be an organizer to access this page.",
-            max_age=10,
-            httponly=True
+    try:
+        parsed_date = datetime.strptime(event_date, "%Y-%m-%d").date()
+        parsed_start_time = datetime.strptime(event_start_time, "%H:%M").time()
+        parsed_end_time = datetime.strptime(event_end_time, "%H:%M").time()
+
+        full_organizer_name = f"{organizer.first_name} {organizer.last_name}"
+
+        new_event = EventBase(
+            owner_uid=organizer.uid,
+            title=title,
+            date=parsed_date,
+            start_time=parsed_start_time,
+            end_time=parsed_end_time,
+            location=location,
+            event_type=event_type,
+            organizer=full_organizer_name,
+            tags=event_tags,
+            image_urls=event_img_urls,
+            description=description
         )
-        return response
-    
-    return templates.TemplateResponse("create_event.html", {"request": request, "username": current_user.username, "is_organizer": current_user.is_organizer})
+
+        db.add(new_event)
+        db.commit()
+        db.refresh(new_event)
+
+        with open("created_events.txt", "a", encoding="utf-8") as f:
+            f.write(f"Title: {title}\n")
+            f.write(f"Description: {description}\n")
+            f.write(f"Date: {event_date}\n")
+            f.write("----------\n")
+
+        return templates.TemplateResponse("create_event.html", {
+            "request": request,
+            "success": True,
+            "event": new_event
+        })
+
+    except ValueError:
+        return templates.TemplateResponse("create_event.html", {
+            "request": request,
+            "error": "Invalid date or time format. Please use YYYY-MM-DD and HH:MM."
+        })
+
+    except Exception as e:
+        print(f"[ERROR] Failed to create event: {e}")
+        return templates.TemplateResponse("create_event.html", {
+            "request": request,
+            "error": "An unexpected error occurred while creating the event."
+        })
 
     
 from fastapi import HTTPException
