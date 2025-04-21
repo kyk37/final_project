@@ -1,4 +1,6 @@
 # Event Management System 
+To import anaconda environment see environment.yaml
+
 # Library/Module Requirements
 - FastAPI: pip install fastapi[all]: https://fastapi.tiangolo.com/
 - pip install fastapi-users[all] (for sqlachemy w/ fastapi)
@@ -42,4 +44,4 @@
 #### Writen By:
 - Kyle Kessler
 - Dan Hiss
-- Keyang Zheng
+- Danny Wan
