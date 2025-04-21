@@ -1,6 +1,6 @@
 import os
 from pydantic import BaseModel
-from typing import Annotated, Optional
+from typing import Annotated, Optional, List
 from contextlib import asynccontextmanager
 from jose import JWTError, jwt
 
@@ -688,9 +688,9 @@ def post_create_event(
     location: str = Form(...),
     event_type: str = Form(...),
     event_tags: str = Form(None),
-    event_img_urls: str = Form(None)
+    event_img_urls: Optional[List[UploadFile]] = File(None),
 ):
-    ''' Create Events!'''
+    ''' Create Events! '''
     if organizer is None or not organizer.is_organizer:
         response = RedirectResponse(url="/login", status_code=303)
         response.set_cookie("message", "Please log in as an organizer", max_age=5)
@@ -704,9 +704,21 @@ def post_create_event(
         end_dt = datetime.combine(parsed_date, parsed_end_time)
 
         is_archived = end_dt < datetime.now()
-
         full_organizer_name = f"{organizer.first_name} {organizer.last_name}"
 
+        image_paths = []
+        if event_img_urls:
+            os.makedirs("static/uploads", exist_ok=True)
+            for img in event_img_urls:
+                if img and img.filename:
+                    ext = os.path.splitext(img.filename)[-1]
+                    filename = f"event_{organizer.uid}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{img.filename}"
+                    save_path = f"static/uploads/{filename}"
+                    with open(save_path, "wb") as f:
+                        f.write(img.file.read())
+                    image_paths.append(f"/static/uploads/{filename}")
+
+        # ⬇️ Now create the event with correct image_urls string
         new_event = EventBase(
             owner_uid=organizer.uid,
             title=title,
@@ -717,18 +729,17 @@ def post_create_event(
             event_type=event_type,
             organizer=full_organizer_name,
             tags=event_tags,
-            image_urls=event_img_urls,
+            image_urls=",".join(image_paths),
             description=description,
             archived=is_archived
         )
-        
-        organizer_in_db = db.merge(organizer) 
+
+        organizer_in_db = db.merge(organizer)
         new_event.attendees.append(organizer_in_db)
-        
+
         db.add(new_event)
         db.commit()
         db.refresh(new_event)
-
 
         return templates.TemplateResponse("create_event.html", {
             "request": request,
@@ -748,6 +759,7 @@ def post_create_event(
             "request": request,
             "error": "An unexpected error occurred while creating the event."
         })
+
 
     
     
