@@ -91,6 +91,9 @@
                         </div>
 
                         <div class="scroll-join-button">
+                          {% if not is_organizer or event.owner_uid != user_id %}
+                          <button class="cancel-btn" onclick="leaveEvent({{ event.uid }})">Leave Event</button>
+                          {% endif %}
                           {% if is_organizer and event.owner_uid == user_id %}
                           <div class="scroll-join-button">
                             {% if event.archived %}
@@ -219,7 +222,30 @@
   </div>
   </div>
 
-
+  <script>
+    function leaveEvent(eventId) {
+      if (!confirm("Are you sure you want to leave this event?")) return;
+    
+      fetch(`/api/unjoin_event/${eventId}`, {
+        method: "POST"
+      })
+      .then(response => {
+        if (response.ok) {
+          alert("You have left the event.");
+          window.location.reload();
+        } else {
+          return response.json().then(data => {
+            throw new Error(data.detail || "Failed to leave event");
+          });
+        }
+      })
+      .catch(err => {
+        console.error("Leave error:", err);
+        alert("Error leaving event.");
+      });
+    }
+    
+  </script>
 
 
     <script>
