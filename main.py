@@ -166,7 +166,7 @@ def main(
 def get_event_summary(
     event_id: int,
     db: Session = Depends(get_event_session),
-    current_user: UserBase = Depends(get_current_user)
+    current_user: Optional[UserBase] = Depends(get_current_user)
 ):
     event = db.query(EventBase).filter(EventBase.uid == event_id).first()
     if event is None:
@@ -720,7 +720,7 @@ def post_create_event(
                         f.write(img.file.read())
                     image_paths.append(f"/static/uploads/{filename}")
 
-        # ⬇️ Now create the event with correct image_urls string
+
         new_event = EventBase(
             owner_uid=organizer.uid,
             title=title,
@@ -763,8 +763,6 @@ def post_create_event(
         })
 
 
-    
-    
 @app.get("/organizer/create_event", response_class=HTMLResponse)
 def get_create_event(
     request: Request,
@@ -816,6 +814,8 @@ def edit_event(event_id: int, data: dict, db: Session = Depends(get_event_sessio
 
     db.commit()
     return {"message": "Event updated successfully"}
+    
+    
     
 
 @app.delete("/api/delete_event/{event_id}")
