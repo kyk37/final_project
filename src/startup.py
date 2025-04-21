@@ -25,7 +25,7 @@ def create_startup_users(db: Session):
     if not admin_user:
         # Create admin user with its own salt
         salt_admin = bcrypt.gensalt(rounds=12)
-        hashed_admin_password = bcrypt.hashpw(admin_password.encode('utf-8'), salt_admin)
+        hashed_admin_password = bcrypt.hashpw(admin_password.encode('utf-8'), salt_admin).decode('utf-8')
         admin_user = User(
             username=admin_username,
             email=admin_email,

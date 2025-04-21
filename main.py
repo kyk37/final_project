@@ -2,7 +2,6 @@ import os
 from pydantic import BaseModel
 from typing import Annotated, Optional
 from contextlib import asynccontextmanager
-
 from jose import JWTError, jwt
 
 from fastapi import FastAPI, APIRouter, Form, Request, Depends, HTTPException, status
@@ -17,11 +16,12 @@ from fastapi import File, UploadFile
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import sessionmaker, Session
 from fastapi import Query
+from fastapi import Body
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from db.session import get_user_session, get_event_session
-from fastapi import Body
+
 
 from src.usr_model import User as UserBase
 from src.event_model import Events as EventBase
@@ -466,66 +466,8 @@ def get_joined_events(
         "event_title": event_titles,
         "user_id": current_user.uid,
         "is_organizer": current_user.is_organizer,
-        "archived": archived  # optionally pass this to template
+        "archived": archived
     })
-
-
-# @app.get("/profile/events")
-# def get_joined_events(
-#     request: Request,
-#     db_event: Session = Depends(get_event_session),
-#     current_user: UserBase = Depends(get_current_user),
-#     page: int = 1,
-#     per_page: int = 20,
-#     archived: bool = False
-# ):
-#     if current_user is None:
-#         response = RedirectResponse(url="/login", status_code=303)
-#         response.set_cookie("message", "Please log in to access this page", max_age=5)
-#         return response
-
-#     user = db_event.query(UserBase).filter(UserBase.uid == current_user.uid).first()
-#     if not user:
-#         return RedirectResponse(url="/login", status_code=303)
-
-#     if archived and current_user.is_organizer:
-#         # Show all archived events organized by this user
-#         query = db_event.query(EventBase).filter(
-#             EventBase.owner_uid == current_user.uid,
-#             EventBase.archived == True
-#         )
-#         all_events = query.all()
-#     else:
-#         # Default behavior: show events the user joined
-#         all_events = user.events
-
-#     total_events = len(all_events)
-#     paginated = all_events[(page - 1) * per_page: page * per_page]
-
-#     joined_event_ids = {e.uid for e in all_events}
-#     attendee_counts = {event.uid: len(event.attendees) for event in paginated}
-#     event_titles = {event.uid: event.title for event in paginated}
-#     attendee_names = {
-#         event.uid: [f"{u.first_name} {u.last_name}" for u in event.attendees]
-#         for event in paginated
-#     }
-
-#     total_pages = (total_events + per_page - 1) // per_page
-
-#     return templates.TemplateResponse("profile_events.html", {
-#         "request": request,
-#         "username": current_user.username,
-#         "user_events": paginated,
-#         "page": page,
-#         "total_pages": total_pages,
-#         "joined_event_ids": joined_event_ids,
-#         "attendee_counts": attendee_counts,
-#         "attendee_names": attendee_names,
-#         "event_title": event_titles,
-#         "user_id": current_user.uid,
-#         "is_organizer": current_user.is_organizer,
-#         "viewing_archived": archived
-#     })
 
     
 @app.get("/profile/edit")
