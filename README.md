@@ -21,7 +21,7 @@ To import anaconda environment see environment.yaml
 - [X] Registration/login portal.
 - [X] Registered users can sign up for future events, and view number of registeres users signed up
 - [X] user profile page/settings. Show events with preview
-- [] Event Manager accounts (tied to specific event organizers) Can publish, edit, cancel events ~see item 6
+- [X] Event Manager accounts (tied to specific event organizers) Can publish, edit, cancel events ~see item 6
 - [X] Event manager profile page shows events they are managing. Can also view the detail page, edit event information, cancel event, and see a list of registered users that joined the event
 - [X] All past events should be archived, no changes and no signups are allowed to past events
 
