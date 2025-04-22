@@ -1,3 +1,12 @@
+USERS: (username:password)
+test:test
+admin:admin
+cs_department:organizer
+student_council:organizer
+wellness_club:organizer
+career_center:organizer
+ai_lab:organizer
+
 # Event Management System 
 To import anaconda environment see environment.yaml
 
