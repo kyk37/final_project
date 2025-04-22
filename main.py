@@ -27,7 +27,7 @@ from src.usr_model import User as UserBase
 from src.event_model import Events as EventBase
 from src.hasher import Hasher
 from src.auth import create_access_token, decode_access_token
-from src.config import SECRET_KEY, ALGORITHM
+from src.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from src.startup import create_startup_users, create_events
 
 from calendar_router import calendar_router
@@ -94,18 +94,28 @@ async def get_token_optional(authorization: str = Header(default=None)):
 
 def get_current_user(request: Request, db: Session = Depends(get_user_session)):
     token = request.cookies.get("access_token")
+    print(f"[DEBUG] Token from cookies: {token}")  # Add this line
+
     if not token:
+        print("[DEBUG] No token found in cookies")
         return None
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])#, options={"verify_exp": False})
+
+        print(f"[DEBUG] Decoded payload: {payload}")  # Add this line
         user_id: str = payload.get("sub")
         if user_id is None:
+            print("[DEBUG] No 'sub' found in payload")
             return None
-    except JWTError:
+    except JWTError as e:
+        print(f"[DEBUG] JWT decoding error: {e}")
         return None
 
-    return db.query(UserBase).filter(UserBase.uid == int(user_id)).first()
+    user = db.query(UserBase).filter(UserBase.uid == int(user_id)).first()
+    print(f"[DEBUG] User found: {user}")  # Add this line
+    return user
+
 
 # -----------------------------
 # Home Page
@@ -306,6 +316,7 @@ def login(request: Request):
     message = request.cookies.get("message")
     response = templates.TemplateResponse("login.html", {"request": request, "message": message})
     response.delete_cookie("message")
+    
     return response
 
 
@@ -334,13 +345,16 @@ def register_user(
     db.commit()
     db.refresh(new_user)
 
-    access_token = create_access_token(data={"sub": str(new_user.uid)})
+    access_token = create_access_token(
+        data={"sub": str(new_user.uid)},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
 
     response = JSONResponse(content={"message": "Registration successful"})
     response.set_cookie(
         key="access_token",
         value=access_token,
-        httponly=True,
+        httponly=False,
         max_age=1800,
         samesite="lax"
     )
@@ -355,22 +369,32 @@ def login_for_access_token(
     if not user or not Hasher.verify_password(form_data.password, user.password_hashed):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
-    access_token = create_access_token(data={"sub": str(user.uid)})
+    access_token = create_access_token(
+        data={"sub": str(user.uid)},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    print(f"[DEBUG] Created token with expiry: {access_token}")  # ADD THIS
 
     response = JSONResponse(content={"access_token": access_token})
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
-        max_age=1800,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         samesite="lax"
     )
     return response
 
+
 @app.post("/logout")
 def logout():
-    response = RedirectResponse(url="/", status_code=303)
-    response.delete_cookie("access_token")
+    response = RedirectResponse(url="/login", status_code=303)
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        samesite="lax",
+        secure=False
+    )
     return response
 
 # -----------------------------

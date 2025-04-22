@@ -154,7 +154,7 @@
             }
     
             const loginData = await loginResponse.json();
-            console.log("✅ Login success. Redirecting...");
+            console.log("Login successful. Redirecting...");
             console.log("Token:", loginData.access_token);
             localStorage.setItem("access_token", loginData.access_token);
 
