@@ -31,12 +31,12 @@
       <div class="left">
         <h2 style="text-align:center;">This Week</h2>
         <div class="menu scrollable-event-list">
-          {% for event in events_today %}
+          {% for event in events_this_week %}
             <a href="#" class="menuitem" onclick="showEventDetails({{ event.uid }})">
               {{ event.title or event.name or "Untitled Event" }}
             </a>
           {% endfor %}
-          {% if not events_today %}
+          {% if not events_this_week %}
             <p style="padding: 10px; font-style: italic; color: var(--text-300);">No events today!</p>
           {% endif %}
         </div>

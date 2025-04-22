@@ -18,6 +18,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from fastapi import Query
 from fastapi import Body
 
+from sqlalchemy import cast, Date
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from db.session import get_user_session, get_event_session
@@ -120,6 +121,17 @@ def get_current_user(request: Request, db: Session = Depends(get_user_session)):
 # -----------------------------
 # Home Page
 # -----------------------------
+from datetime import date, timedelta, datetime, time
+from fastapi import Request, Depends
+from fastapi.responses import HTMLResponse
+from sqlalchemy.orm import Session
+from typing import Optional
+from fastapi import Request, Depends
+from fastapi.responses import HTMLResponse
+from sqlalchemy.orm import Session
+from datetime import datetime, date, timedelta, time
+from typing import Optional
+
 @app.get("/", response_class=HTMLResponse)
 def main(
     request: Request, 
@@ -129,39 +141,52 @@ def main(
     per_page: int = 20
 ):
     '''
-        Main Home Page
+    Main Home Page
     '''
-    from datetime import timedelta
-
     today = date.today()
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=6)
+    start_of_week = today - timedelta(days=today.weekday()) 
+    end_of_week = start_of_week + timedelta(days=6)        
+
+    start_of_week_dt = datetime.combine(start_of_week, time.min)
+    end_of_week_dt = datetime.combine(end_of_week, time.max)
 
     events_this_week = []
     joined_event_ids = set()
 
     if current_user:
-        user_in_event_db = db_event.merge(current_user)
-        events_this_week = db_event.query(EventBase).filter(
+        print(f"Username: {current_user.username}, UID: {current_user.uid}")
+
+
+        owned_events_this_week = db_event.query(EventBase).filter(
             EventBase.owner_uid == current_user.uid,
-            EventBase.date.between(start_of_week, end_of_week)
+            EventBase.date.between(start_of_week_dt, end_of_week_dt)
         ).all()
+
+        joined_events_this_week = db_event.query(EventBase).join(EventBase.attendees).filter(
+            UserBase.uid == current_user.uid,
+            EventBase.date.between(start_of_week_dt, end_of_week_dt)
+        ).all()
+
+        events_this_week = list({e.uid: e for e in owned_events_this_week + joined_events_this_week}.values())
+
+        print(f"Events this week for {current_user.username}: {[e.title for e in events_this_week]}")
+        user_in_event_db = db_event.merge(current_user)
         joined_event_ids = {e.uid for e in user_in_event_db.events}
-    
-    # Search all Events that are NOT archived
+
+
     query = db_event.query(EventBase).filter(EventBase.archived == False)
     all_events = query.offset((page - 1) * per_page).limit(per_page).all()
     attendee_counts = {event.uid: len(event.attendees) for event in all_events}
-    event_titles = {event.uid: (event.title) for event in all_events}
+    event_titles = {event.uid: event.title for event in all_events}
     event_descriptions = {event.uid: event.description for event in all_events}
-    
+
     total_events = query.count()
     total_pages = (total_events + per_page - 1) // per_page
 
     return templates.TemplateResponse('home.html', {
         'request': request,
         'username': current_user.username if current_user else None,
-        'events_today': events_this_week,
+        'events_this_week': events_this_week,
         'all_events': all_events,
         'page': page,
         'total_pages': total_pages,
@@ -170,6 +195,7 @@ def main(
         'event_title': event_titles,
         'description': event_descriptions
     })
+
 
 
 @app.get("/api/event/{event_id}")
@@ -280,6 +306,8 @@ def search_events(
             EventBase.date.between(start_of_week, end_of_week)
         ).all()
         joined_event_ids = {e.uid for e in user_in_event_db.events}
+        print(f"Events this week: {[e.title for e in events_this_week]}")
+        print(f"Joined event IDs: {joined_event_ids}")
 
     base_query = db_event.query(EventBase).filter(EventBase.archived == False)
 
@@ -296,16 +324,16 @@ def search_events(
     total_events = base_query.count()
     total_pages = (total_events + per_page - 1) // per_page
 
-    return templates.TemplateResponse("home.html", {
-        "request": request,
-        "username": current_user.username if current_user else None,
-        "events_today": events_this_week,
-        "all_events": all_events,
-        "page": page,
-        "total_pages": total_pages,
-        "joined_event_ids": joined_event_ids,
-        "attendee_counts": attendee_counts,
-        "event_title": event_titles
+    return templates.TemplateResponse('home.html', {
+        'request': request,
+        'username': current_user.username if current_user else None,
+        'events_this_week': events_this_week,
+        'all_events': all_events,
+        'page': page,
+        'total_pages': total_pages,
+        'joined_event_ids': joined_event_ids,
+        'attendee_counts': attendee_counts,
+        'event_title': event_titles
     })
     
 # -----------------------------
