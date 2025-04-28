@@ -1,14 +1,12 @@
 import os
-from pydantic import BaseModel
-from typing import Annotated, Optional, List
+from typing import Optional, List
 from contextlib import asynccontextmanager
-from jose import JWTError, jwt
 
-from fastapi import FastAPI, APIRouter, Form, Request, Depends, HTTPException, status
+from fastapi import FastAPI, APIRouter, Form, Request, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm#, OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi import Header
@@ -17,18 +15,15 @@ from fastapi.responses import RedirectResponse
 from datetime import datetime, date, timedelta, time
 
 from sqlalchemy import or_
-from sqlalchemy import cast, Date
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 
-# from db.session import get_user_session, get_event_session
 from db.session import DB_FILE, engine, sessionLocal, get_db_session
 
 from src.usr_model import User as UserBase
 from src.event_model import Events as EventBase
 from src.hasher import Hasher
 from src.auth import create_access_token, decode_access_token
-from src.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from src.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from src.startup import create_startup_users, create_events
 
 from calendar_router import calendar_router
@@ -58,9 +53,8 @@ async def lifespan(app: FastAPI):
         db.close()
     yield
 
-
-# OAuth Setup
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# OAuth Setup (Not Implemented)
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Setup APIRouter
 router = APIRouter()
@@ -84,38 +78,29 @@ async def get_token_optional(authorization: str = Header(default=None)):
         return None
     return token
 
+
 def get_current_user(request: Request, db: Session = Depends(get_db_session)):
     '''
-        Get the current access token from cookie
+        Get the current user from the token
+            Use the created token decode
     '''
-    # get the cookie
     token = request.cookies.get("access_token")
-    # print(f"[DEBUG] Token from cookies: {token}") 
+    print(f"[DEBUG] Token from cookies: {token}") 
 
-    # if no cookie
     if not token:
-        # print("[DEBUG] No token found in cookies")
+        print("[DEBUG] No token found in cookies")
         return None
 
     try:
-        #  Decode the token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])#, options={"verify_exp": False}) # this option prevents verification for troubleshooting
+        decoded = decode_access_token(token)
+        print(f"[DEBUG] Decoded payload: {decoded}")
+        user_id = decoded["user_id"]
 
-        # print(f"[DEBUG] Decoded payload: {payload}")
-        # get the user id
-        user_id: str = payload.get("sub")
-        
-        if user_id is None:
-            # print("[DEBUG] No 'sub' found in payload")
-            return None
-        
-    except JWTError as e:
-        # print(f"[DEBUG] JWT decoding error: {e}")
+    except HTTPException as e:
+        print(f"[DEBUG] JWT decoding error: {e.detail}")
         return None
 
-    # Query the userID and check if its in the database, if it is return user
     user = db.query(UserBase).filter(UserBase.uid == int(user_id)).first()
-    # print(f"[DEBUG] User found: {user}")
     return user
 
 
@@ -156,7 +141,6 @@ def main(
             or_(
                 EventBase.owner_uid == current_user.uid,
                 EventBase.attendees.contains(current_user)
-                #UserBase.uid == current_user.uid
             )
         ).distinct().all()
 
@@ -203,7 +187,7 @@ def get_event_summary(
     current_user: Optional[UserBase] = Depends(get_current_user)
 ):
     '''
-        Acquire events
+        Acquire events for the scrolling events list
     '''
     event = db.query(EventBase).filter(EventBase.uid == event_id).first()
     
@@ -406,6 +390,7 @@ def register_user(
     # create the access token using the user id, set expiration from config
     access_token = create_access_token(
         data={"sub": str(new_user.uid)},
+        audience="web_client",
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
@@ -438,9 +423,10 @@ def login_for_access_token(
     # make the access token
     access_token = create_access_token(
         data={"sub": str(user.uid)},
+        audience="web_client",
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    # print(f"[DEBUG] Created token with expiry: {access_token}")
+    print(f"[DEBUG] Created token with expiry: {access_token}")
 
     response = JSONResponse(content={"access_token": access_token})
     response.set_cookie(
@@ -464,9 +450,10 @@ def logout():
     # Delete the access token cookie
     response.delete_cookie(
         key="access_token",
-        httponly=True,
+        httponly=True, 
         samesite="lax",
-        secure=False
+        secure=False, # set Secure=True if HTTPS in production
+        path="/login"
     )
     return response
 

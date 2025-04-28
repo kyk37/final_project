@@ -2,10 +2,9 @@ from sqlalchemy.orm import Session
 import bcrypt
 from src.usr_model import User
 from src.event_model import Events
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 from src.usr_model import User
 import random
-from random import randint, choice
 from faker import Faker
 faker = Faker()
 

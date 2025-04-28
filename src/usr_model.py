@@ -1,5 +1,5 @@
 from sqlalchemy import Integer, String, DateTime, func, Boolean
-from sqlalchemy.orm import Mapped, mapped_column, relationship, declarative_base
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from dataclasses import dataclass
 from typing import ClassVar
 
