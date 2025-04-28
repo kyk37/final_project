@@ -4,6 +4,9 @@ import bcrypt
 class Hasher:
     @staticmethod
     def verify_password(plain_password, hashed_password):
+        '''
+            Check instance of the password, and encode it if its a string
+        '''
         if isinstance(plain_password, str):
             plain_password = plain_password.encode('utf-8')
         if isinstance(hashed_password, str):
@@ -12,6 +15,11 @@ class Hasher:
 
     @staticmethod
     def get_password_hash(password):
+        '''
+            Get the password hash. 
+            Salt is stored within the hash for verification process
+            It takes the salt, then re-hashes, and compares the result to the stored hash.
+        '''
         if isinstance(password, str):
             password = password.encode('utf-8')
         salt = bcrypt.gensalt(rounds=12)

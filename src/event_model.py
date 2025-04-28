@@ -3,6 +3,7 @@ from sqlalchemy import String, Integer, DateTime, Table, ForeignKey, Column
 from db.base import Base
 from sqlalchemy import JSON
 
+# create event_signups
 event_signups = Table(
     "event_signups",
     Base.metadata,
@@ -11,8 +12,10 @@ event_signups = Table(
 )
 
 class Events(Base):
+    # Create events table in database
     __tablename__ = "events"
 
+    # Setup database parameters
     uid: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     owner_uid: Mapped[int] = mapped_column(Integer, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False)
@@ -27,6 +30,7 @@ class Events(Base):
     description: Mapped[str] = mapped_column(String, nullable=True)
     archived: Mapped[bool] = mapped_column(default=False)
     
+    # Set attendees and map to the User class for relationship, backpopulate this event with the User
     attendees: Mapped[list["User"]] = relationship(
         "User",
         secondary=event_signups,

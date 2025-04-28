@@ -7,6 +7,10 @@ calendar_router = APIRouter(prefix="/api", tags=["calendar"])
 
 @calendar_router.get("/events")
 def get_events(db: Session = Depends(get_event_session)):
+    '''
+        Get the event info for the calendar
+    '''
+    # Search all events
     db_events = db.query(Events).all()
     return [
         {

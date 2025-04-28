@@ -4,6 +4,9 @@ from sqlalchemy.orm import sessionmaker
 from src.usr_model import User
 from src.event_model import Events
 
+'''
+    Not sure if this is used of not... I think it might be.. but it already exists in main()
+'''
 # Database URLs
 USER_DATABASE_URL = "sqlite:///./user_database.db"
 

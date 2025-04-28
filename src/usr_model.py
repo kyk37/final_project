@@ -8,8 +8,13 @@ from src.event_model import event_signups#, Events,
 from db.base import Base
 
 class User(Base):
+    '''
+        User Class for database
+    '''
+    # Table in database called users
     __tablename__ = "users"
 
+    # User information
     uid: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
@@ -31,6 +36,7 @@ class User(Base):
         default="/static/defaults/default_avatar.jpg"
     )
 
+    # Relationship back to events for attendees list.
     events: Mapped[list["Events"]] = relationship(
         "Events",
         secondary=event_signups,

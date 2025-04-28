@@ -47,6 +47,7 @@
           <div class="profile-box">
             
             <form action="/profile/edit" method="post", enctype="multipart/form-data">
+
               <!--css issues with Search Box: Forcing HTML so the name is beside the value-->
               <div style="display: flex; align-items: center; margin-bottom: 12px;">
                 <label for="first_name" style="width: 120px; min-width: 120px; font-weight: bold; text-align: right; margin-right: 10px;">
@@ -164,12 +165,14 @@
 
   
     <script>
+      // Dark theme
       const toggleTheme = () => {
         const body = document.body;
         const isDark = body.getAttribute('data-theme') === 'dark';
         body.setAttribute('data-theme', isDark ? 'light' : 'dark');
       };
 
+      // call logout and refresh to login
       function logout() {
         fetch("/logout", {
           method: "POST"

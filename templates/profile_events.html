@@ -9,6 +9,7 @@
 </head>
 
 <body>
+  <!-- Header -->
   <div class=" page-container">
     <div class="header">
       <div class="header-left">
@@ -20,6 +21,7 @@
       </div>
     </div>
 
+    <!-- Left side buttons -->
     <div class="content">
     <div class="left">
       <h2 style="text-align:center;">Account Settings</h2>
@@ -89,7 +91,7 @@
                             </ul>
                           
                         </div>
-
+                        <!-- Buttons for edit/cancel events -->
                         <div class="scroll-join-button">
                           {% if not is_organizer or event.owner_uid != user_id %}
                           <button class="cancel-btn" onclick="leaveEvent({{ event.uid }})">Leave Event</button>
@@ -147,31 +149,6 @@
     </div>
   </div>
 
-  <script>
-    function cancelEvent(eventId) {
-      if (!confirm("Are you sure you want to cancel this event?")) return;
-  
-      fetch(`/api/delete_event/${eventId}`, {
-        method: "DELETE"
-      })
-      .then(response => {
-        if (response.ok) {
-          alert("Event canceled successfully.");
-          window.location.reload();
-        } else {
-          return response.json().then(data => {
-            throw new Error(data.detail || "Failed to cancel event");
-          });
-        }
-      })
-      .catch(err => {
-        console.error("Cancel error:", err);
-        alert("Error canceling event.");
-      });
-    }
-  </script>
-  
-
   <!-- Edit Event Modal -->
   <div id="editEventModal" class="modal" style="display:none;">
     <div class="modal-content">
@@ -223,6 +200,33 @@
   </div>
 
   <script>
+    
+    // Cancel the event
+    function cancelEvent(eventId) {
+      if (!confirm("Are you sure you want to cancel this event?")) return;
+  
+      fetch(`/api/delete_event/${eventId}`, {
+        method: "DELETE"
+      })
+      .then(response => {
+        if (response.ok) {
+          alert("Event canceled successfully.");
+          window.location.reload();
+        } else {
+          return response.json().then(data => {
+            throw new Error(data.detail || "Failed to cancel event");
+          });
+        }
+      })
+      .catch(err => {
+        console.error("Cancel error:", err);
+        alert("Error canceling event.");
+      });
+    }
+  </script>
+
+  <script>
+    // leave event
     function leaveEvent(eventId) {
       if (!confirm("Are you sure you want to leave this event?")) return;
     
@@ -249,7 +253,7 @@
 
 
     <script>
-      // Theme
+      // Dark Theme
       const toggleTheme = () => {
         const body = document.body;
         const isDark = body.getAttribute('data-theme') === 'dark';
@@ -290,7 +294,7 @@
       });
     }
 
-      // logout button
+      // logout
       function logout() {
         fetch("/logout", {
           method: "POST"
@@ -304,6 +308,7 @@
     </script>
 
     <script>
+      // toggle attendees list
       function toggleAttendees(eventId) {
         const list = document.getElementById(`attendee-list-${eventId}`);
         if (list.style.display === "none") {
@@ -316,6 +321,7 @@
 
 
     <script>
+      // If event is edited, save the changes
       function saveEventChanges() {
         const eventId = document.getElementById("edit-event-id").value;
         const payload = {
@@ -355,6 +361,7 @@
       
 
       <script>
+        // Modal for editing the event
       function openEditModal(eventId) {
         fetch(`/api/event/${eventId}`)
           .then(response => response.json())
@@ -372,7 +379,7 @@
             document.getElementById("editEventModal").style.display = "block";
           });
       }
-      
+      // close the modal
       function closeEditModal() {
         document.getElementById("editEventModal").style.display = "none";
       }
@@ -381,6 +388,7 @@
 
 
     <script>
+      // update archive status
       function updateArchivedStatusLabel() {
         const params = new URLSearchParams(window.location.search);
         const statusEl = document.getElementById("archived-status");

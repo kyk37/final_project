@@ -10,6 +10,9 @@ from faker import Faker
 faker = Faker()
 
 def create_startup_users(db: Session):
+    '''
+        Create origional users admin, test, organizers
+    '''
     organizer_map = {}
     # Define user credentials
     admin_username = "admin"
@@ -48,7 +51,7 @@ def create_startup_users(db: Session):
     if not test_user:
         # Create test user with its own salt
         salt_test = bcrypt.gensalt(rounds=12)
-        hashed_test_pw = bcrypt.hashpw(test_password.encode('utf-8'), salt_admin).decode('utf-8')
+        hashed_test_pw = bcrypt.hashpw(test_password.encode('utf-8'), salt_test).decode('utf-8')
 
         test_user = User(
             username=test_username,
@@ -82,7 +85,7 @@ def create_startup_users(db: Session):
             continue
 
         salt = bcrypt.gensalt(rounds=12)
-        hashed_org_password = bcrypt.hashpw(password.encode('utf-8'), salt_admin).decode('utf-8')
+        hashed_org_password = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 
         organizer = User(
@@ -115,6 +118,9 @@ def random_datetime(start_range, end_range):
 
 
 def create_events(event_db: Session, organizer_map: dict[str, int]):
+    '''
+        Create a set of random events made by different organizers.
+    '''
     titles = [
         "Intro to Python", "Data Science Workshop", "AI Ethics Panel", "React Crash Course",
         "Cybersecurity 101", "Hackathon Planning", "Career Fair Prep", "Yoga Session",
