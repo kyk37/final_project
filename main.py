@@ -21,7 +21,8 @@ from sqlalchemy import cast, Date
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from db.session import get_user_session, get_event_session
+# from db.session import get_user_session, get_event_session
+from db.session import DB_FILE, engine, sessionLocal, get_db_session
 
 from src.usr_model import User as UserBase
 from src.event_model import Events as EventBase
@@ -34,28 +35,17 @@ from calendar_router import calendar_router
 
 from db.base import Base
 
-# Database setup
-USER_DATABASE_URL = "sqlite:///./user_database.db"
-
-
-# File paths for the SQLite databases
-USER_DB_FILE = "./user_database.db"
-
-engine_usr = create_engine(USER_DATABASE_URL, connect_args={"check_same_thread": False})
-
-SessionLocal_usr = sessionmaker(autocommit=False, autoflush=False, bind=engine_usr)
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Delete existing database files if they exist
-    if os.path.exists(USER_DB_FILE):
-        os.remove(USER_DB_FILE)
+    if os.path.exists(DB_FILE):
+        os.remove(DB_FILE)
 
     # Create tables
-    Base.metadata.create_all(bind=engine_usr)
+    Base.metadata.create_all(bind=engine)
 
     # Initialize database session
-    db = SessionLocal_usr()
+    db = sessionLocal()
     try:
         organizer_map = create_startup_users(db)
         create_events(db, organizer_map)
@@ -94,7 +84,7 @@ async def get_token_optional(authorization: str = Header(default=None)):
         return None
     return token
 
-def get_current_user(request: Request, db: Session = Depends(get_user_session)):
+def get_current_user(request: Request, db: Session = Depends(get_db_session)):
     '''
         Get the current access token from cookie
     '''
@@ -136,7 +126,7 @@ def get_current_user(request: Request, db: Session = Depends(get_user_session)):
 @app.get("/", response_class=HTMLResponse)
 def main(
     request: Request, 
-    db_event: Session = Depends(get_event_session), 
+    db_event: Session = Depends(get_db_session), 
     current_user: Optional[UserBase] = Depends(get_current_user),
     page: int = 1,
     per_page: int = 20
@@ -165,7 +155,8 @@ def main(
             EventBase.date.between(start_of_week_dt, end_of_week_dt),
             or_(
                 EventBase.owner_uid == current_user.uid,
-                UserBase.uid == current_user.uid
+                EventBase.attendees.contains(current_user)
+                #UserBase.uid == current_user.uid
             )
         ).distinct().all()
 
@@ -208,7 +199,7 @@ def main(
 @app.get("/api/event/{event_id}")
 def get_event_summary(
     event_id: int,
-    db: Session = Depends(get_event_session),
+    db: Session = Depends(get_db_session),
     current_user: Optional[UserBase] = Depends(get_current_user)
 ):
     '''
@@ -235,7 +226,7 @@ def get_event_summary(
 @app.post("/api/join_event/{event_id}")
 def join_event(
     event_id: int,
-    db: Session = Depends(get_event_session),
+    db: Session = Depends(get_db_session),
     current_user: UserBase = Depends(get_current_user)
 ):
     '''
@@ -267,7 +258,7 @@ def join_event(
 @app.post("/api/unjoin_event/{event_id}")
 def unjoin_event(
     event_id: int,
-    db: Session = Depends(get_event_session),
+    db: Session = Depends(get_db_session),
     current_user: UserBase = Depends(get_current_user)
 ):
     '''
@@ -303,7 +294,7 @@ def unjoin_event(
 def search_events(
     request: Request,
     search: Optional[str] = "",
-    db_event: Session = Depends(get_event_session),
+    db_event: Session = Depends(get_db_session),
     current_user: Optional[UserBase] = Depends(get_current_user),
     page: int = 1,
     per_page: int = 20
@@ -384,7 +375,7 @@ def register_user(
     new_username: str = Form(...),
     new_password: str = Form(...),
     email: str = Form(...),
-    db: Session = Depends(get_user_session)
+    db: Session = Depends(get_db_session)
 ):
     '''
         Register a new user
@@ -432,7 +423,7 @@ def register_user(
 @app.post("/token")
 def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_user_session)
+    db: Session = Depends(get_db_session)
 ):
     '''
         Create the access token used for login
@@ -541,7 +532,7 @@ def update_password(
     current_password: str = Form(...),
     new_password: str = Form(...),
     confirm_password: str = Form(...),
-    db: Session = Depends(get_user_session),
+    db: Session = Depends(get_db_session),
     current_user: Optional[UserBase] = Depends(get_current_user)
 ):
     # Get the current user, if not logged in redirect to login
@@ -581,7 +572,7 @@ def update_password(
 @app.get("/profile/events")
 def get_joined_events(
     request: Request,
-    db_event: Session = Depends(get_event_session),
+    db_event: Session = Depends(get_db_session),
     current_user: UserBase = Depends(get_current_user),
     page: int = 1,
     per_page: int = 20,
@@ -680,7 +671,7 @@ def update_profile_settings(
     phone: str = Form(..., pattern=r"^\d{10,15}$"), # ensure phone number is 10-15 numbers long
     first_name: Optional[str] = Form(None),
     last_name: Optional[str] = Form(None),
-    db: Session = Depends(get_user_session),
+    db: Session = Depends(get_db_session),
     current_user: Optional[UserBase] = Depends(get_current_user)
 ):
     # if someone not logged in attempts to access page redirect to login
@@ -779,7 +770,7 @@ def prof_calendar(
 @app.get("/profile/calendar/events")
 def get_user_calendar_events(
     request: Request,
-    db: Session = Depends(get_event_session),
+    db: Session = Depends(get_db_session),
     current_user: Optional[UserBase] = Depends(get_current_user)
 ):
     '''
@@ -800,7 +791,7 @@ def get_user_calendar_events(
 
 @app.get("/api/user-events")
 def get_user_events(
-    db: Session = Depends(get_event_session),
+    db: Session = Depends(get_db_session),
     current_user: UserBase = Depends(get_current_user)
 ):
     ''' 
@@ -839,7 +830,7 @@ def get_user_events(
 @app.post("/organizer/create_event", response_class=HTMLResponse)
 def post_create_event(
     request: Request,
-    db: Session = Depends(get_event_session),
+    db: Session = Depends(get_db_session),
     organizer: Optional[UserBase] = Depends(get_current_user),
     title: str = Form(...),
     description: str = Form(None),
@@ -948,7 +939,7 @@ def get_create_event(
     })
 
 @app.put("/api/edit_event/{event_id}")
-def edit_event(event_id: int, data: dict, db: Session = Depends(get_event_session), current_user: UserBase = Depends(get_current_user)):
+def edit_event(event_id: int, data: dict, db: Session = Depends(get_db_session), current_user: UserBase = Depends(get_current_user)):
     
     # edit the event information, get the event
     event = db.get(EventBase, event_id)
@@ -993,7 +984,7 @@ def edit_event(event_id: int, data: dict, db: Session = Depends(get_event_sessio
 
 @app.delete("/api/delete_event/{event_id}")
 def delete_event(event_id: int, 
-                 db: Session = Depends(get_event_session), 
+                 db: Session = Depends(get_db_session), 
                 current_user: Optional[UserBase] = Depends(get_current_user)):
     '''
         Delete the event
@@ -1010,7 +1001,7 @@ def delete_event(event_id: int,
 
 
 @app.get("/organizer/{organizer_id}")
-def get_organizer_info(organizer_id: int, db: Session = Depends(get_user_session)):
+def get_organizer_info(organizer_id: int, db: Session = Depends(get_db_session)):
     '''
         if the organizer is not found flag
     '''

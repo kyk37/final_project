@@ -81,7 +81,7 @@ def create_startup_users(db: Session):
         existing = db.query(User).filter(User.username == username).first()
         if existing:
             print(f"Organizer '{username}' already exists. Using existing account.")
-            organizer_map[org_name] = existing
+            organizer_map[org_name] = existing.uid
             continue
 
         salt = bcrypt.gensalt(rounds=12)

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from src.event_model import Events
-from db.session import get_event_session
+from db.session import get_db_session
 
 calendar_router = APIRouter(prefix="/api", tags=["calendar"])
 
 @calendar_router.get("/events")
-def get_events(db: Session = Depends(get_event_session)):
+def get_events(db: Session = Depends(get_db_session)):
     '''
         Get the event info for the calendar
     '''
